@@ -1,4 +1,5 @@
-﻿using Domain;
+﻿using Application.DTOs;
+using Domain;
 using Microsoft.AspNetCore.Identity;
 
 public class AuthService : IAuthService
@@ -26,14 +27,15 @@ public class AuthService : IAuthService
         return _jwtService.GenerateToken(user.Id, user.Email!);
     }
 
-    public async Task<IdentityResult> RegisterAsync(string email, string password, string firstName)
+    public async Task<IdentityResult> RegisterAsync(RegisterDTO registerDTO)
     {
         var newUser = new User
         {
-            FirstName = firstName,
-            Email = email,
+            FirstName = registerDTO.FirstName,
+            Email = registerDTO.Email,
+            UserName = registerDTO.Email
         };
-        return await _userManager.CreateAsync(newUser, password);
+        return await _userManager.CreateAsync(newUser, registerDTO.Password);
     }
 
     public async Task LogoutAsync()
