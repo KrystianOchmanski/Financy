@@ -16,10 +16,10 @@ public class AuthService : IAuthService
         _jwtService = jwtService;
     }
 
-    public async Task<string?> LoginAsync(string email, string password)
+    public async Task<string?> LoginAsync(LoginDTO loginDTO)
     {
-        var user = await _userManager.FindByEmailAsync(email);
-        if (user == null || !await _userManager.CheckPasswordAsync(user, password))
+        var user = await _userManager.FindByEmailAsync(loginDTO.Email);
+        if (user == null || !await _userManager.CheckPasswordAsync(user, loginDTO.Password))
         {
             return null; // Invalid login data
         }

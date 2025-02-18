@@ -25,5 +25,16 @@ namespace WebAPI.Controllers
             }
             return Ok(result);
         }
+
+        [HttpPost("/login")]
+        public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
+        {
+            var token = await _authService.LoginAsync(loginDTO);
+            if(token == null)
+            {
+                return Unauthorized("Invalid email or password");
+            }
+            return Ok(token);
+        }
     }
 }
