@@ -1,22 +1,20 @@
 ﻿using Application.DTOs;
 using Domain;
 using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 
 public class AuthService : IAuthService
 {
     private readonly UserManager<User> _userManager;
-    private readonly SignInManager<User> _signInManager;
     private readonly JwtService _jwtService;
 
-    public AuthService(UserManager<User> userManager, SignInManager<User> signInManager,
-                                JwtService jwtService)
+    public AuthService(UserManager<User> userManager, JwtService jwtService)
     {
         _userManager = userManager;
-        _signInManager = signInManager;
         _jwtService = jwtService;
     }
 
-    public async Task<string?> LoginAsync(LoginDTO loginDTO)
+    public async Task<(string Token, string RefreshToken)?> LoginAsync(LoginDTO loginDTO)
     {
         var user = await _userManager.FindByEmailAsync(loginDTO.Email);
         if (user == null || !await _userManager.CheckPasswordAsync(user, loginDTO.Password))
@@ -24,7 +22,31 @@ public class AuthService : IAuthService
             return null; // Invalid login data
         }
 
-        return _jwtService.GenerateToken(user.Id, user.Email!);
+        var token = _jwtService.GenerateToken(user.Id, user.Email!);
+        var refreshToken = _jwtService.GenerateRefreshToken();
+
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+
+        var updateResult = await _userManager.UpdateAsync(user);
+        if (!updateResult.Succeeded)
+        {
+            return null;
+        }
+
+        return (token, refreshToken);
+    }
+
+    public string? RefreshToken(string refreshToken)
+    {
+        var user = _userManager.Users.FirstOrDefault(u => u.RefreshToken == refreshToken);
+        if (user == null || user.RefreshTokenExpiryTime < DateTime.UtcNow)
+        {
+            return null;
+        }
+
+        var newToken = _jwtService.GenerateToken(user.Id, user.Email!);
+        return newToken;
     }
 
     public async Task<IdentityResult> RegisterAsync(RegisterDTO registerDTO)
@@ -38,9 +60,25 @@ public class AuthService : IAuthService
         return await _userManager.CreateAsync(newUser, registerDTO.Password);
     }
 
-    public async Task LogoutAsync()
+    public async Task<bool> LogoutAsync(ClaimsPrincipal userClaims)
     {
-        await _signInManager.SignOutAsync();
+        var userId = _userManager.GetUserId(userClaims);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return false; // Invalid token
+        }
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return false; // User not found
+        }
+
+        user.RefreshToken = null;
+        user.RefreshTokenExpiryTime = null;
+
+        var result = await _userManager.UpdateAsync(user);
+        return result.Succeeded;
     }
 
     public async Task<IdentityResult> ChangePasswordAsync(string userId, string currentPassword, string newPassword)
