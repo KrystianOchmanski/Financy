@@ -1,8 +1,12 @@
 ﻿using Application.Configuration;
+using Application.IRepositories;
+using Application.IServices;
+using Application.Services;
 using Domain;
 using Domain.Interfaces;
 using Infrastructure;
 using Infrastructure.Repositories;
+using Infrastructure.UnitOfWork;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -99,7 +103,9 @@ builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 
 // Controllers
 builder.Services.AddControllers();

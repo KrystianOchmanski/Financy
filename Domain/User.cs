@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Domain
 {
@@ -8,6 +9,7 @@ namespace Domain
         [Required(ErrorMessage = "First name is required")]
         public string FirstName { get; set; } = null!;
 
+        [JsonIgnore]
         public List<Account> Accounts { get; set; } = new List<Account>();
 
         public string? RefreshToken { get; set; }

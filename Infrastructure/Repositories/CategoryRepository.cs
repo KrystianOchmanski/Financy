@@ -26,13 +26,11 @@ namespace Infrastructure.Repositories
         public async Task AddAsync(Category category)
         {
             await _context.Categories.AddAsync(category);
-            await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(Category category)
+        public void UpdateAsync(Category category)
         {
             _context.Categories.Update(category);
-            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
@@ -41,7 +39,6 @@ namespace Infrastructure.Repositories
             if (category != null)
             {
                 _context.Categories.Remove(category);
-                await _context.SaveChangesAsync();
             }
         }
     }

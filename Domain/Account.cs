@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Domain
 {
@@ -14,10 +15,12 @@ namespace Domain
         [Column(TypeName = "decimal(18,2)")]
         public decimal Balance { get; set; } = 0;
 
+        [JsonIgnore]
         public List<Transaction> Transactions { get; set; } = new List<Transaction>();
 
         public string UserId { get; set; } = null!;
 
+        [JsonIgnore]
         public User User { get; set; } = null!;
     }
 }

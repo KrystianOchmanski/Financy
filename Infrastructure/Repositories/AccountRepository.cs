@@ -26,13 +26,11 @@ namespace Infrastructure.Repositories
         public async Task CreateAccountAsync(Account account)
         {
             await _context.Accounts.AddAsync(account);
-            await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAccountAsync(Account account)
+        public void UpdateAccount(Account account)
         {
             _context.Accounts.Update(account);
-            await _context.SaveChangesAsync();
         }
 
         public async Task UpdateAccountBalanceAsync(int accountId, decimal newBalance)
@@ -42,7 +40,6 @@ namespace Infrastructure.Repositories
             {
                 account.Balance = newBalance;
                 _context.Accounts.Update(account);
-                await _context.SaveChangesAsync();
             }
         }
 
@@ -53,7 +50,6 @@ namespace Infrastructure.Repositories
             if (account != null)
             {
                 _context.Accounts.Remove(account);
-                await _context.SaveChangesAsync();
             }
         }
     }

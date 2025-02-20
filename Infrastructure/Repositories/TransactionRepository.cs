@@ -65,26 +65,21 @@ namespace Infrastructure.Repositories
                                  .ToListAsync();
         }
 
-        public async Task CreateTransactionAsync(Transaction transaction)
+        public async Task<Transaction> CreateTransactionAsync(Transaction transaction)
         {
-            await _context.Transactions.AddAsync(transaction);
-            await _context.SaveChangesAsync();
+            var newTransaction = await _context.Transactions.AddAsync(transaction);
+            return newTransaction.Entity;
         }
 
-        public async Task UpdateTransactionAsync(Transaction transaction)
+        public Transaction UpdateTransactionAsync(Transaction transaction)
         {
-            _context.Transactions.Update(transaction);
-            await _context.SaveChangesAsync();
+            var updatedTransaction = _context.Transactions.Update(transaction);
+            return updatedTransaction.Entity;
         }
 
-        public async Task DeleteTransactionAsync(int id)
+        public void DeleteTransaction(Transaction transaction)
         {
-            var transaction = await _context.Transactions.FindAsync(id);
-            if (transaction != null)
-            {
-                _context.Transactions.Remove(transaction);
-                await _context.SaveChangesAsync();
-            }
+            _context.Transactions.Remove(transaction);
         }
     }
 }
