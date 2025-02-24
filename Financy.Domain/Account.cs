@@ -22,5 +22,8 @@ namespace Domain
 
         [JsonIgnore]
         public User User { get; set; } = null!;
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; } = null!;
     }
 }
