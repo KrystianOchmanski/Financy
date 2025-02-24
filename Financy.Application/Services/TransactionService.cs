@@ -3,6 +3,7 @@ using Application.IRepositories;
 using Application.IServices;
 using Domain;
 using Domain.Interfaces;
+using System.Linq.Expressions;
 
 namespace Application.Services
 {
@@ -86,34 +87,9 @@ namespace Application.Services
             return await _transactionRepository.GetByIdAsync(transactionId);
         }
 
-        public async Task<IEnumerable<Transaction>> GetTransactionsByAccountIdAsync(int accountId)
+        public async Task<IEnumerable<Transaction>> GetFilteredTransactionsAsync(Expression<Func<Transaction, bool>> predicate)
         {
-            return await _transactionRepository.GetTransactionsByAccountIdAsync(accountId);
-        }
-
-        public async Task<IEnumerable<Transaction>> GetTransactionsByAmountRangeAsync(decimal minAmount, decimal maxAmount)
-        {
-            return await _transactionRepository.GetTransactionsByAmountRangeAsync(minAmount, maxAmount);
-        }
-
-        public async Task<IEnumerable<Transaction>> GetTransactionsByCategoryIdAsync(int categoryId)
-        {
-            return await _transactionRepository.GetTransactionsByCategoryIdAsync(categoryId);
-        }
-
-        public async Task<IEnumerable<Transaction>> GetTransactionsByDateAsync(DateOnly date)
-        {
-            return await _transactionRepository.GetTransactionsByDateAsync(date);
-        }
-
-        public async Task<IEnumerable<Transaction>> GetTransactionsByDateRangeAsync(DateOnly startDate, DateOnly endDate)
-        {
-            return await _transactionRepository.GetTransactionsByDateRangeAsync(startDate, endDate);
-        }
-
-        public async Task<IEnumerable<Transaction>> GetTransactionsByTypeAsync(TransactionType type)
-        {
-            return await _transactionRepository.GetTransactionsByTypeAsync(type);
+            return await _transactionRepository.GetFilteredTransactionsAsync(predicate);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Domain.Interfaces;
 using Domain;
+using System.Linq.Expressions;
 
 namespace Infrastructure.Repositories
 {
@@ -23,48 +24,6 @@ namespace Infrastructure.Repositories
             return await _context.Transactions.ToListAsync();
         }
 
-        public async Task<IEnumerable<Transaction>> GetTransactionsByAccountIdAsync(int accountId)
-        {
-            return await _context.Transactions
-                                 .Where(t => t.AccountId == accountId)
-                                 .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Transaction>> GetTransactionsByCategoryIdAsync(int categoryId)
-        {
-            return await _context.Transactions
-                                 .Where(t => t.CategoryId == categoryId)
-                                 .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Transaction>> GetTransactionsByDateAsync(DateOnly date)
-        {
-            return await _context.Transactions
-                                 .Where(t => t.Date == date)
-                                 .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Transaction>> GetTransactionsByDateRangeAsync(DateOnly startDate, DateOnly endDate)
-        {
-            return await _context.Transactions
-                                 .Where(t => t.Date >= startDate && t.Date <= endDate)
-                                 .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Transaction>> GetTransactionsByTypeAsync(TransactionType type)
-        {
-            return await _context.Transactions
-                                 .Where(t => t.Type == type)
-                                 .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Transaction>> GetTransactionsByAmountRangeAsync(decimal minAmount, decimal maxAmount)
-        {
-            return await _context.Transactions
-                                 .Where(t => t.Amount >= minAmount && t.Amount <= maxAmount)
-                                 .ToListAsync();
-        }
-
         public async Task<Transaction> CreateTransactionAsync(Transaction transaction)
         {
             var newTransaction = await _context.Transactions.AddAsync(transaction);
@@ -80,6 +39,11 @@ namespace Infrastructure.Repositories
         public void DeleteTransaction(Transaction transaction)
         {
             _context.Transactions.Remove(transaction);
+        }
+
+        public async Task<IEnumerable<Transaction>> GetFilteredTransactionsAsync(Expression<Func<Transaction, bool>> predicate)
+        {
+            return await _context.Transactions.Where(predicate).ToListAsync();
         }
     }
 }
