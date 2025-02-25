@@ -1,5 +1,5 @@
-﻿using Application.DTOs;
-using Domain;
+﻿using Domain;
+using Financy.Application.DTOs.TransactionDTOs;
 using System.Linq.Expressions;
 
 namespace Application.IServices
@@ -12,9 +12,9 @@ namespace Application.IServices
 
         Task<IEnumerable<Transaction>> GetFilteredTransactionsAsync(Expression<Func<Transaction, bool>> predicate);
 
-        Task<Transaction> AddTransactionAsync(AddTransactionDTO transaction);
+        Task<Transaction> AddTransactionAsync(CreateTransactionDTO transaction);
 
-        void UpdateTransaction(Transaction transaction);
+        Task<Transaction> UpdateTransactionAsync(EditTransactionDTO transaction);
 
         Task<bool> DeleteTransactionAsync(int id);
     }

@@ -30,7 +30,7 @@ namespace Infrastructure.Repositories
             return newTransaction.Entity;
         }
 
-        public Transaction UpdateTransactionAsync(Transaction transaction)
+        public Transaction UpdateTransaction(Transaction transaction)
         {
             var updatedTransaction = _context.Transactions.Update(transaction);
             return updatedTransaction.Entity;

@@ -1,4 +1,4 @@
-﻿namespace Application.DTOs
+﻿namespace Financy.Application.DTOs.Auth
 {
     public class LoginDTO
     {

@@ -1,5 +1,6 @@
-﻿using Application.DTOs;
-using Application.IServices;
+﻿using Application.IServices;
+using Domain;
+using Financy.Application.DTOs.TransactionDTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,14 +19,17 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddTransactionAsync([FromBody] AddTransactionDTO transactionDTO)
+        public async Task<IActionResult> AddTransactionAsync([FromBody] CreateTransactionDTO transactionDTO)
         {
-            //if (transactionDTO == null)
-            //{
-            //    return BadRequest();
-            //}
             var newTransaction = await _transactionService.AddTransactionAsync(transactionDTO);
             return Ok(newTransaction);
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateTransactionAsync([FromBody] EditTransactionDTO transaction)
+        {
+            var updatedTransaction = await _transactionService.UpdateTransactionAsync(transaction);
+            return Ok(updatedTransaction);
         }
     }
 }

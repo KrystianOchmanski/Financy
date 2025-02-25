@@ -1,5 +1,5 @@
-﻿using Application.DTOs;
-using Domain;
+﻿using Domain;
+using Financy.Application.DTOs.Auth;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 

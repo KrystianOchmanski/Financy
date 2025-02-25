@@ -1,8 +1,8 @@
-﻿using Application.DTOs;
-using Application.IRepositories;
+﻿using Application.IRepositories;
 using Application.IServices;
 using Domain;
 using Domain.Interfaces;
+using Financy.Application.DTOs.TransactionDTOs;
 using System.Linq.Expressions;
 
 namespace Application.Services
@@ -21,33 +21,21 @@ namespace Application.Services
             _categoryRepository = categoryRepository;
             _unitOfWork = unitOfWork;
         }
-        public async Task<Transaction> AddTransactionAsync(AddTransactionDTO transactionDto)
+        public async Task<Transaction> AddTransactionAsync(CreateTransactionDTO transactionDto)
         {
             var account = await _accountRepository.GetByIdAsync(transactionDto.AccountId);
             if (account == null)
-                throw new Exception("Account not found");
+                throw new KeyNotFoundException($"Account with ID {transactionDto.AccountId} was not found.");
 
             var category = await _categoryRepository.GetByIdAsync(transactionDto.CategoryId);
             if (category == null)
-                throw new Exception("Category not found");
-
-            // Updating account balance
-            switch (transactionDto.Type)
-            {
-                case TransactionType.Income:
-                    account.Balance += transactionDto.Amount;
-                    break;
-
-                case TransactionType.Expense:
-                    if (account.Balance < transactionDto.Amount)
-                    {
-                        throw new Exception("Insufficient balance");
-                    }
-                    account.Balance -= transactionDto.Amount;
-                    break;
-            }
+                throw new KeyNotFoundException($"Category with ID {transactionDto.CategoryId} was not found.");
 
             var transaction = (Transaction)transactionDto;
+
+            // Updating account balance
+            account.AddTransactionToBalance(transaction);
+            
             transaction.Account = account;
             transaction.Category = category;
 
@@ -58,10 +46,41 @@ namespace Application.Services
         }
 
 
-        public async void UpdateTransaction(Transaction transaction)
+        public async Task<Transaction> UpdateTransactionAsync(EditTransactionDTO editedTransaction)
         {
-            _transactionRepository.UpdateTransactionAsync(transaction);
+            var transaction = await _transactionRepository.GetByIdAsync(editedTransaction.Id);
+
+            if (transaction == null)
+                throw new KeyNotFoundException($"Transaction with ID {editedTransaction.Id} was not found.");
+
+            // When changing category
+            if(transaction.CategoryId != editedTransaction.CategoryId)
+            {
+                var newCategory = await _categoryRepository.GetByIdAsync(editedTransaction.CategoryId);
+                if (newCategory == null)
+                    throw new KeyNotFoundException($"Category with ID {editedTransaction.CategoryId} was not found.");
+
+                transaction.Category = newCategory;
+            }
+
+            // When changing amount
+            if(transaction.Amount != editedTransaction.Amount)
+            {
+                var account = await _accountRepository.GetByIdAsync(transaction.AccountId);
+                if (account == null)
+                    throw new KeyNotFoundException($"Account with ID {transaction.AccountId} was not found.");
+
+                account.UpdateBalance(transaction, editedTransaction);
+                _accountRepository.UpdateAccount(account);
+            }
+
+            transaction.Amount = editedTransaction.Amount;
+            transaction.Date = DateOnly.Parse(editedTransaction.Date);
+            transaction.Description = editedTransaction.Description;
+
+            var updatedTransaction = _transactionRepository.UpdateTransaction(transaction);
             await _unitOfWork.SaveChangesAsync();
+            return updatedTransaction;
 
         }
 

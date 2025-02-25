@@ -2,9 +2,9 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 
-namespace Application.DTOs
+namespace Financy.Application.DTOs.TransactionDTOs
 {
-    public class AddTransactionDTO
+    public class CreateTransactionDTO
     {
         [Required]
         [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be grater than 0")]
@@ -24,7 +24,7 @@ namespace Application.DTOs
 
         public int CategoryId { get; set; }
 
-        public static implicit operator Transaction(AddTransactionDTO dto)
+        public static implicit operator Transaction(CreateTransactionDTO dto)
         {
             return new Transaction
             {

@@ -8,7 +8,7 @@ namespace Domain.Interfaces
         Task<IEnumerable<Transaction>> GetAllTransactionsAsync();
         Task<IEnumerable<Transaction>> GetFilteredTransactionsAsync(Expression<Func<Transaction, bool>> predicate);
         Task<Transaction> CreateTransactionAsync(Transaction transaction);
-        Transaction UpdateTransactionAsync(Transaction transaction);
+        Transaction UpdateTransaction(Transaction transaction);
         void DeleteTransaction(Transaction transaction);
     }
 }

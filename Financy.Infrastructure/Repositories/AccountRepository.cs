@@ -33,16 +33,10 @@ namespace Infrastructure.Repositories
             _context.Accounts.Update(account);
         }
 
-        public async Task UpdateAccountBalanceAsync(int accountId, decimal newBalance)
+        public void UpdateAccountsRange(IEnumerable<Account> accounts)
         {
-            var account = await _context.Accounts.FindAsync(accountId);
-            if (account != null)
-            {
-                account.Balance = newBalance;
-                _context.Accounts.Update(account);
-            }
+            _context.Accounts.UpdateRange(accounts);
         }
-
 
         public async Task DeleteAccountAsync(int accountId)
         {
