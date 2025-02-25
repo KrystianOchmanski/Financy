@@ -16,6 +16,6 @@ namespace Application.IServices
 
         Task<Transaction> UpdateTransactionAsync(EditTransactionDTO transaction);
 
-        Task<bool> DeleteTransactionAsync(int id);
+        Task DeleteTransactionAsync(int id);
     }
 }

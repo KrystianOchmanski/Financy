@@ -84,16 +84,21 @@ namespace Application.Services
 
         }
 
-        public async Task<bool> DeleteTransactionAsync(int id)
+        public async Task DeleteTransactionAsync(int id)
         {
             var transaction = await _transactionRepository.GetByIdAsync(id);
-            if (transaction != null)
-            {
-                _transactionRepository.DeleteTransaction(transaction);
-                await _unitOfWork.SaveChangesAsync();
-                return true;
-            }
-            return false;
+            if (transaction == null)
+                throw new KeyNotFoundException($"Transaction with ID {id} was not found.");
+
+            var account = await _accountRepository.GetByIdAsync(transaction.AccountId);
+            if(account == null)
+                throw new KeyNotFoundException($"Account with ID {transaction.AccountId} was not found.");
+
+            account.RemoveTransactionFromBalance(transaction);
+            
+            _accountRepository.UpdateAccount(account);
+            _transactionRepository.DeleteTransaction(transaction);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task<IEnumerable<Transaction>> GetAllTransactionsAsync()
