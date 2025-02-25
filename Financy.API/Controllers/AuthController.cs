@@ -87,12 +87,7 @@ namespace WebAPI.Controllers
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
-            bool result = await _authService.LogoutAsync(User);
-
-            if (!result)
-            {
-                return BadRequest("Logout failed.");
-            }
+            await _authService.LogoutAsync(User);
 
             return Ok("User logged out successfully.");
         }

@@ -18,11 +18,6 @@ namespace Infrastructure.Repositories
             return await _context.Accounts.FindAsync(accountId);
         }
 
-        public async Task<IEnumerable<Account>> GetAllAccountsByUserIdAsync(string userId)
-        {
-            return await _context.Accounts.Where(a => a.UserId == userId).ToListAsync();
-        }
-
         public async Task CreateAccountAsync(Account account)
         {
             await _context.Accounts.AddAsync(account);
@@ -45,6 +40,19 @@ namespace Infrastructure.Repositories
             {
                 _context.Accounts.Remove(account);
             }
+        }
+
+        public async Task<IEnumerable<Account>> GetAllUserAccountsAsync(string userId)
+        {
+            return await _context.Accounts.Where(a => a.UserId == userId).ToListAsync();
+        }
+
+        public async Task<IEnumerable<Account>> GetAllUserAccountsWithTransactionsAsync(string userId)
+        {
+            return await _context.Accounts
+                .Include(a => a.Transactions)
+                .Where(a => a.UserId == userId)
+                .ToListAsync();
         }
     }
 }

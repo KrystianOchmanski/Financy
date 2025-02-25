@@ -45,5 +45,12 @@ namespace Infrastructure.Repositories
         {
             return await _context.Transactions.Where(predicate).ToListAsync();
         }
+
+        public async Task<Transaction?> GetTransactionWithAccountAsync(int id)
+        {
+            return await _context.Transactions
+                .Include(t => t.Account)
+                .FirstOrDefaultAsync(t => t.Id == id);
+        }
     }
 }

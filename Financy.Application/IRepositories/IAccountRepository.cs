@@ -4,7 +4,9 @@
     {
         Task<Account?> GetByIdAsync(int accountId);
 
-        Task<IEnumerable<Account>> GetAllAccountsByUserIdAsync(string userId);
+        Task<IEnumerable<Account>> GetAllUserAccountsAsync(string userId);
+
+        Task<IEnumerable<Account>> GetAllUserAccountsWithTransactionsAsync(string userId);
 
         Task CreateAccountAsync(Account account);
 

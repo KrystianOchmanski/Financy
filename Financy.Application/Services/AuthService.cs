@@ -60,25 +60,28 @@ public class AuthService : IAuthService
         return await _userManager.CreateAsync(newUser, registerDTO.Password);
     }
 
-    public async Task<bool> LogoutAsync(ClaimsPrincipal userClaims)
+    public async Task LogoutAsync(ClaimsPrincipal userClaims)
     {
         var userId = _userManager.GetUserId(userClaims);
         if (string.IsNullOrWhiteSpace(userId))
         {
-            return false; // Invalid token
+            throw new Exception("Invalid token");
         }
 
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null)
         {
-            return false; // User not found
+            throw new Exception("User not found");
         }
 
         user.RefreshToken = null;
         user.RefreshTokenExpiryTime = null;
 
         var result = await _userManager.UpdateAsync(user);
-        return result.Succeeded;
+        if (!result.Succeeded)
+        {
+            throw new Exception("User update went wrong");
+        }
     }
 
     public async Task<IdentityResult> ChangePasswordAsync(string userId, string currentPassword, string newPassword)

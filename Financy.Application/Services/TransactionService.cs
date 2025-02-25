@@ -3,7 +3,9 @@ using Application.IServices;
 using Domain;
 using Domain.Interfaces;
 using Financy.Application.DTOs.TransactionDTOs;
+using Microsoft.AspNetCore.Identity;
 using System.Linq.Expressions;
+using System.Security.Claims;
 
 namespace Application.Services
 {
@@ -13,19 +15,28 @@ namespace Application.Services
         private readonly IAccountRepository _accountRepository;
         private readonly ICategoryRepository _categoryRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly UserManager<User> _userManager;
 
-        public TransactionService(ITransactionRepository transactionRepository, IAccountRepository accountRepository, ICategoryRepository categoryRepository, IUnitOfWork unitOfWork)
+        public TransactionService(ITransactionRepository transactionRepository, IAccountRepository accountRepository, ICategoryRepository categoryRepository, IUnitOfWork unitOfWork, UserManager<User> userManager)
         {
             _transactionRepository = transactionRepository;
             _accountRepository = accountRepository;
             _categoryRepository = categoryRepository;
             _unitOfWork = unitOfWork;
+            _userManager = userManager;
         }
-        public async Task<Transaction> AddTransactionAsync(CreateTransactionDTO transactionDto)
+        public async Task<Transaction> AddTransactionAsync(ClaimsPrincipal userClaims, CreateTransactionDTO transactionDto)
         {
+            var userId = _userManager.GetUserId(userClaims);
+            if(string.IsNullOrWhiteSpace(userId))
+                throw new Exception("Invalid token");
+
             var account = await _accountRepository.GetByIdAsync(transactionDto.AccountId);
             if (account == null)
                 throw new KeyNotFoundException($"Account with ID {transactionDto.AccountId} was not found.");
+
+            if (account.UserId != userId)
+                throw new UnauthorizedAccessException("User does not have access to this account");
 
             var category = await _categoryRepository.GetByIdAsync(transactionDto.CategoryId);
             if (category == null)
@@ -46,12 +57,20 @@ namespace Application.Services
         }
 
 
-        public async Task<Transaction> UpdateTransactionAsync(EditTransactionDTO editedTransaction)
+        public async Task<Transaction> UpdateTransactionAsync(ClaimsPrincipal userClaims, EditTransactionDTO editedTransaction)
         {
-            var transaction = await _transactionRepository.GetByIdAsync(editedTransaction.Id);
+            var userId = _userManager.GetUserId(userClaims);
+            if (string.IsNullOrWhiteSpace(userId))
+                throw new Exception("Invalid token");
+
+            var transaction = await _transactionRepository.GetTransactionWithAccountAsync(editedTransaction.Id);
 
             if (transaction == null)
                 throw new KeyNotFoundException($"Transaction with ID {editedTransaction.Id} was not found.");
+
+            if (transaction.Account.UserId != userId)
+                throw new UnauthorizedAccessException("User does not have access to this account");
+
 
             // When changing category
             if(transaction.CategoryId != editedTransaction.CategoryId)
@@ -84,36 +103,52 @@ namespace Application.Services
 
         }
 
-        public async Task DeleteTransactionAsync(int id)
+        public async Task DeleteTransactionAsync(ClaimsPrincipal userClaims, int id)
         {
-            var transaction = await _transactionRepository.GetByIdAsync(id);
+            var userId = _userManager.GetUserId(userClaims);
+            if (string.IsNullOrEmpty(userId))
+                throw new Exception("Invalid token");
+
+            var transaction = await _transactionRepository.GetTransactionWithAccountAsync(id);
             if (transaction == null)
                 throw new KeyNotFoundException($"Transaction with ID {id} was not found.");
 
-            var account = await _accountRepository.GetByIdAsync(transaction.AccountId);
-            if(account == null)
-                throw new KeyNotFoundException($"Account with ID {transaction.AccountId} was not found.");
+            if(transaction.Account.UserId != userId)
+                throw new UnauthorizedAccessException("User does not have access to this account");
 
-            account.RemoveTransactionFromBalance(transaction);
+            transaction.Account.RemoveTransactionFromBalance(transaction);
             
-            _accountRepository.UpdateAccount(account);
+            _accountRepository.UpdateAccount(transaction.Account);
             _transactionRepository.DeleteTransaction(transaction);
             await _unitOfWork.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<Transaction>> GetAllTransactionsAsync()
+        public async Task<IEnumerable<Transaction>> GetAllUserTransactionsAsync(ClaimsPrincipal userClaims)
         {
-            return await _transactionRepository.GetAllTransactionsAsync();
+            var userId = _userManager.GetUserId(userClaims);
+            if (string.IsNullOrEmpty(userId))
+                throw new Exception("Invalid token");
+
+            var userAccounts = await _accountRepository.GetAllUserAccountsWithTransactionsAsync(userId);
+
+            var userTransactions = new List<Transaction>();
+            foreach (var account in userAccounts)
+            {
+                userTransactions.AddRange(account.Transactions);
+            }
+            userTransactions.OrderByDescending(t => t.Date);
+
+            return userTransactions;
         }
 
-        public async Task<Transaction?> GetTransactionByIdAsync(int transactionId)
+        public Task<Transaction?> GetTransactionByIdAsync(ClaimsPrincipal userClaims, int transactionId)
         {
-            return await _transactionRepository.GetByIdAsync(transactionId);
+            throw new NotImplementedException();
         }
 
-        public async Task<IEnumerable<Transaction>> GetFilteredTransactionsAsync(Expression<Func<Transaction, bool>> predicate)
+        public Task<IEnumerable<Transaction>> GetFilteredTransactionsAsync(ClaimsPrincipal userClaims, Expression<Func<Transaction, bool>> predicate)
         {
-            return await _transactionRepository.GetFilteredTransactionsAsync(predicate);
+            throw new NotImplementedException();
         }
     }
 }

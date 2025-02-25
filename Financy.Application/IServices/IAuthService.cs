@@ -11,7 +11,7 @@ public interface IAuthService
 
     Task<IdentityResult> RegisterAsync(RegisterDTO registerDTO);
 
-    Task<bool> LogoutAsync(ClaimsPrincipal userClaims);
+    Task LogoutAsync(ClaimsPrincipal userClaims);
 
     Task<IdentityResult> ChangePasswordAsync(string userId, string currentPassword, string newPassword);
 }
