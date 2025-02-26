@@ -11,7 +11,7 @@ namespace Application.IServices
 
         Task<Transaction?> GetTransactionByIdAsync(ClaimsPrincipal userClaims, int transactionId);
 
-        Task<IEnumerable<Transaction>> GetFilteredTransactionsAsync(ClaimsPrincipal userClaims, Expression<Func<Transaction, bool>> predicate);
+        Task<IEnumerable<Transaction>> GetFilteredTransactionsAsync(ClaimsPrincipal userClaims, TransactionFilterDTO filter);
 
         Task<Transaction> AddTransactionAsync(ClaimsPrincipal userClaims, CreateTransactionDTO transactionDto);
 
