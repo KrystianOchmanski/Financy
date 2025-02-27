@@ -24,7 +24,7 @@ namespace Application.Services
             _unitOfWork = unitOfWork;
             _userManager = userManager;
         }
-        public async Task<Transaction> AddTransactionAsync(ClaimsPrincipal userClaims, CreateTransactionDTO transactionDto)
+        public async Task<TransactionDTO> AddTransactionAsync(ClaimsPrincipal userClaims, CreateTransactionDTO transactionDto)
         {
             var userId = _userManager.GetUserId(userClaims);
             if(string.IsNullOrWhiteSpace(userId))
@@ -56,13 +56,13 @@ namespace Application.Services
         }
 
 
-        public async Task<Transaction> UpdateTransactionAsync(ClaimsPrincipal userClaims, EditTransactionDTO editedTransaction)
+        public async Task<TransactionDTO> UpdateTransactionAsync(ClaimsPrincipal userClaims, EditTransactionDTO editedTransaction)
         {
             var userId = _userManager.GetUserId(userClaims);
             if (string.IsNullOrWhiteSpace(userId))
                 throw new UnauthorizedAccessException("Invalid token");
 
-            var transaction = await _transactionRepository.GetTransactionWithAccountAsync(editedTransaction.Id);
+            var transaction = await _transactionRepository.GetByIdAsync(editedTransaction.Id);
 
             if (transaction == null)
                 throw new KeyNotFoundException($"Transaction with ID {editedTransaction.Id} was not found.");
@@ -108,7 +108,7 @@ namespace Application.Services
             if (string.IsNullOrEmpty(userId))
                 throw new UnauthorizedAccessException("Invalid token");
 
-            var transaction = await _transactionRepository.GetTransactionWithAccountAsync(id);
+            var transaction = await _transactionRepository.GetByIdAsync(id);
             if (transaction == null)
                 throw new KeyNotFoundException($"Transaction with ID {id} was not found.");
 
@@ -122,7 +122,7 @@ namespace Application.Services
             await _unitOfWork.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<Transaction>> GetAllUserTransactionsAsync(ClaimsPrincipal userClaims)
+        public async Task<IEnumerable<TransactionDTO>> GetAllUserTransactionsAsync(ClaimsPrincipal userClaims)
         {
             var userId = _userManager.GetUserId(userClaims);
             if (string.IsNullOrEmpty(userId))
@@ -130,32 +130,30 @@ namespace Application.Services
 
             var userAccounts = await _accountRepository.GetAllUserAccountsWithTransactionsAsync(userId);
 
-            var userTransactions = new List<Transaction>();
+            var userTransactions = new List<TransactionDTO>();
             foreach (var account in userAccounts)
             {
-                userTransactions.AddRange(account.Transactions);
+                userTransactions.AddRange(account.Transactions.Select(t => new TransactionDTO(t)));
             }
-            userTransactions.OrderByDescending(t => t.Date);
 
-            return userTransactions;
+            return userTransactions.OrderByDescending(t => t.Date);
         }
 
-        public async Task<Transaction?> GetTransactionByIdAsync(ClaimsPrincipal userClaims, int transactionId)
+        public async Task<TransactionDTO?> GetTransactionByIdAsync(ClaimsPrincipal userClaims, int transactionId)
         {
 			var userId = _userManager.GetUserId(userClaims);
 			if (string.IsNullOrEmpty(userId))
 				throw new UnauthorizedAccessException("Invalid token");
 
-            var transaction = await _transactionRepository.GetTransactionWithAccountAsync(transactionId);
+            var transaction = await _transactionRepository.GetByIdAsync(transactionId);
 
-            if (transaction != null)
-                if (transaction.Account.UserId != userId)
-                    throw new UnauthorizedAccessException($"User does not have access to transaction ID {transactionId}");
+            if (transaction == null)
+                return null;
 
             return transaction;
 		}
 
-        public async Task<IEnumerable<Transaction>> GetFilteredTransactionsAsync(ClaimsPrincipal userClaims, TransactionFilterDTO filter)
+        public async Task<IEnumerable<TransactionDTO>> GetFilteredTransactionsAsync(ClaimsPrincipal userClaims, TransactionFilterDTO filter)
         {
             var userTransactions = await GetAllUserTransactionsAsync(userClaims);
 

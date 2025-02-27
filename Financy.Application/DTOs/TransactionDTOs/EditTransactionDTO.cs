@@ -6,7 +6,6 @@ namespace Financy.Application.DTOs.TransactionDTOs
 {
     public class EditTransactionDTO
     {
-        [Required]
         public int Id { get; set; }
 
         [Required]

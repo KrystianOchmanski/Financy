@@ -51,6 +51,7 @@ namespace Infrastructure.Repositories
         {
             return await _context.Accounts
                 .Include(a => a.Transactions)
+                .ThenInclude(t => t.Category)
                 .Where(a => a.UserId == userId)
                 .ToListAsync();
         }

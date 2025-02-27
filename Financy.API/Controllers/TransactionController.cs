@@ -61,7 +61,7 @@ namespace WebAPI.Controllers
         {
             if(id != transaction.Id)
             {
-                return BadRequest("Transaction ID mismatch");
+                return BadRequest($"Transaction ID mismatch. Request ID:{id} Body ID:{transaction.Id}");
             }
 
             var updatedTransaction = await _transactionService.UpdateTransactionAsync(User, transaction);

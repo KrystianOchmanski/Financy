@@ -16,7 +16,10 @@ namespace Infrastructure.Repositories
 
         public async Task<Transaction?> GetByIdAsync(int id)
         {
-            return await _context.Transactions.FindAsync(id);
+            return await _context.Transactions
+                .Include(t => t.Account)
+                .Include(t => t.Category)
+                .FirstOrDefaultAsync(t => t.Id == id);
         }
 
         public async Task<IEnumerable<Transaction>> GetAllTransactionsAsync()
@@ -44,13 +47,6 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<Transaction>> GetFilteredTransactionsAsync(Expression<Func<Transaction, bool>> predicate)
         {
             return await _context.Transactions.Where(predicate).ToListAsync();
-        }
-
-        public async Task<Transaction?> GetTransactionWithAccountAsync(int id)
-        {
-            return await _context.Transactions
-                .Include(t => t.Account)
-                .FirstOrDefaultAsync(t => t.Id == id);
         }
     }
 }
