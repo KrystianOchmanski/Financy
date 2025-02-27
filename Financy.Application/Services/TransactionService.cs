@@ -72,7 +72,7 @@ namespace Application.Services
 
 
             // When changing category
-            if(transaction.CategoryId != editedTransaction.CategoryId)
+            if (transaction.CategoryId != editedTransaction.CategoryId)
             {
                 var newCategory = await _categoryRepository.GetByIdAsync(editedTransaction.CategoryId);
                 if (newCategory == null)
@@ -128,7 +128,7 @@ namespace Application.Services
             if (string.IsNullOrEmpty(userId))
                 throw new UnauthorizedAccessException("Invalid token");
 
-            var userAccounts = await _accountRepository.GetAllUserAccountsWithTransactionsAsync(userId);
+            var userAccounts = await _accountRepository.GetAllUserAccountsAsync(userId, true);
 
             var userTransactions = new List<TransactionDTO>();
             foreach (var account in userAccounts)

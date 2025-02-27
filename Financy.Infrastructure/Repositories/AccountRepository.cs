@@ -13,9 +13,10 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<Account?> GetByIdAsync(int accountId)
+        public async Task<Account?> GetByIdAsync(int accountId, bool includeTransactions = false)
         {
-            return await _context.Accounts.FindAsync(accountId);
+            return await BuildIncludeQuery(includeTransactions)
+                .FirstOrDefaultAsync(a => a.Id == accountId);
         }
 
         public async Task CreateAccountAsync(Account account)
@@ -28,11 +29,6 @@ namespace Infrastructure.Repositories
             _context.Accounts.Update(account);
         }
 
-        public void UpdateAccountsRange(IEnumerable<Account> accounts)
-        {
-            _context.Accounts.UpdateRange(accounts);
-        }
-
         public async Task DeleteAccountAsync(int accountId)
         {
             var account = await _context.Accounts.FindAsync(accountId);
@@ -42,18 +38,28 @@ namespace Infrastructure.Repositories
             }
         }
 
-        public async Task<IEnumerable<Account>> GetAllUserAccountsAsync(string userId)
+        public async Task<IEnumerable<Account>> GetAllUserAccountsAsync(string userId, bool includeTransactions = false)
         {
-            return await _context.Accounts.Where(a => a.UserId == userId).ToListAsync();
-        }
-
-        public async Task<IEnumerable<Account>> GetAllUserAccountsWithTransactionsAsync(string userId)
-        {
-            return await _context.Accounts
-                .Include(a => a.Transactions)
-                .ThenInclude(t => t.Category)
+            return await BuildIncludeQuery(includeTransactions)
                 .Where(a => a.UserId == userId)
                 .ToListAsync();
         }
-    }
+
+		/// <summary>
+		/// Helper method to build query with optional include
+		/// </summary>
+		private IQueryable<Account> BuildIncludeQuery(bool includeTransactions)
+		{
+			var query = _context.Accounts.AsQueryable();
+
+			if (includeTransactions)
+			{
+				query = query
+					.Include(a => a.Transactions)
+					.ThenInclude(t => t.Category);
+			}
+
+			return query;
+		}
+	}
 }
