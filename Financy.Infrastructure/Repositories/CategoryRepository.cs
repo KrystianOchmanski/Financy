@@ -28,7 +28,7 @@ namespace Infrastructure.Repositories
             await _context.Categories.AddAsync(category);
         }
 
-        public void UpdateAsync(Category category)
+        public void Update(Category category)
         {
             _context.Categories.Update(category);
         }

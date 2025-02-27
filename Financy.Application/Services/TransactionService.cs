@@ -172,6 +172,7 @@ namespace Application.Services
                         (!filter.AccountId.HasValue || t.AccountId == filter.AccountId) &&
                         (!filter.CategoryId.HasValue || t.CategoryId == filter.CategoryId)
 				)
+                .OrderByDescending(t => t.Date)
                 .ToList();
 
             return filteredTransactions;
