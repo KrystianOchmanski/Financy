@@ -4,6 +4,8 @@ using Application.IServices;
 using Application.Services;
 using Domain;
 using Domain.Interfaces;
+using Financy.Application.IServices;
+using Financy.Application.Services;
 using Infrastructure;
 using Infrastructure.Repositories;
 using Infrastructure.UnitOfWork;
@@ -106,6 +108,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
 
 // Controllers
 builder.Services.AddControllers();
