@@ -22,6 +22,12 @@ namespace Domain
         [Required]
         public TransactionType Type { get; set; }
 
+        [Required]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
         public int AccountId { get; set; }
 
         [JsonIgnore]
