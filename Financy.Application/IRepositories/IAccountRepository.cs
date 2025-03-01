@@ -6,10 +6,10 @@
 
         Task<IEnumerable<Account>> GetAllUserAccountsAsync(string userId, bool includeTransactions = false);
 
-        Task CreateAccountAsync(Account account);
+        Task<Account> CreateAccountAsync(Account account);
 
-        void UpdateAccount(Account account);
+        Account UpdateAccount(Account account);
 
-        Task DeleteAccountAsync(int accountId);
+        bool DeleteAccount(Account account);
     }
 }

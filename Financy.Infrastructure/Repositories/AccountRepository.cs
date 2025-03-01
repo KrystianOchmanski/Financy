@@ -19,22 +19,29 @@ namespace Infrastructure.Repositories
                 .FirstOrDefaultAsync(a => a.Id == accountId);
         }
 
-        public async Task CreateAccountAsync(Account account)
+        public async Task<Account> CreateAccountAsync(Account account)
         {
-            await _context.Accounts.AddAsync(account);
+            var newAccount = await _context.Accounts.AddAsync(account);
+            return newAccount.Entity;
         }
 
-        public void UpdateAccount(Account account)
+        public Account UpdateAccount(Account account)
         {
-            _context.Accounts.Update(account);
+            var updatedAccount = _context.Accounts.Update(account);
+            return updatedAccount.Entity;
         }
 
-        public async Task DeleteAccountAsync(int accountId)
+        public bool DeleteAccount(Account account)
         {
-            var account = await _context.Accounts.FindAsync(accountId);
-            if (account != null)
+            var result = _context.Accounts.Remove(account);
+            
+            if(result.State == EntityState.Deleted)
             {
-                _context.Accounts.Remove(account);
+                return true;
+            } 
+            else
+            {
+                return false;
             }
         }
 

@@ -1,5 +1,4 @@
-﻿using Domain;
-using Financy.Application.DTOs.TransactionDTOs;
+﻿using Financy.Application.DTOs.TransactionDTOs;
 using System.Security.Claims;
 
 namespace Application.IServices
