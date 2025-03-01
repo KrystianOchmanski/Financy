@@ -22,11 +22,6 @@ namespace Infrastructure.Repositories
                 .FirstOrDefaultAsync(t => t.Id == id);
         }
 
-        public async Task<IEnumerable<Transaction>> GetAllTransactionsAsync()
-        {
-            return await _context.Transactions.ToListAsync();
-        }
-
         public async Task<Transaction> CreateTransactionAsync(Transaction transaction)
         {
             var newTransaction = await _context.Transactions.AddAsync(transaction);
@@ -42,11 +37,6 @@ namespace Infrastructure.Repositories
         public void DeleteTransaction(Transaction transaction)
         {
             _context.Transactions.Remove(transaction);
-        }
-
-        public async Task<IEnumerable<Transaction>> GetFilteredTransactionsAsync(Expression<Func<Transaction, bool>> predicate)
-        {
-            return await _context.Transactions.Where(predicate).ToListAsync();
         }
     }
 }

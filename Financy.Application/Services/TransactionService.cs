@@ -27,15 +27,13 @@ namespace Application.Services
         public async Task<TransactionDTO> AddTransactionAsync(ClaimsPrincipal userClaims, CreateTransactionDTO transactionDto)
         {
             var userId = _userManager.GetUserId(userClaims);
-            if(string.IsNullOrWhiteSpace(userId))
-                throw new UnauthorizedAccessException("Invalid token");
 
             var account = await _accountRepository.GetByIdAsync(transactionDto.AccountId);
             if (account == null)
                 throw new KeyNotFoundException($"Account with ID {transactionDto.AccountId} was not found.");
 
             if (account.UserId != userId)
-                throw new UnauthorizedAccessException("User does not have access to add transaction to this account");
+                throw new UnauthorizedAccessException($"User (ID:{userId}) does not have access to add transaction to account ID:{transactionDto.AccountId}");
 
             var category = await _categoryRepository.GetByIdAsync(transactionDto.CategoryId);
             if (category == null)
@@ -59,8 +57,6 @@ namespace Application.Services
         public async Task<TransactionDTO> UpdateTransactionAsync(ClaimsPrincipal userClaims, EditTransactionDTO editedTransaction)
         {
             var userId = _userManager.GetUserId(userClaims);
-            if (string.IsNullOrWhiteSpace(userId))
-                throw new UnauthorizedAccessException("Invalid token");
 
             var transaction = await _transactionRepository.GetByIdAsync(editedTransaction.Id);
 
@@ -68,7 +64,7 @@ namespace Application.Services
                 throw new KeyNotFoundException($"Transaction with ID {editedTransaction.Id} was not found.");
 
             if (transaction.Account.UserId != userId)
-                throw new UnauthorizedAccessException($"User does not have access to update transaction with ID {editedTransaction.Id}");
+                throw new UnauthorizedAccessException($"User (ID:{userId}) does not have access to update transaction with ID {editedTransaction.Id}");
 
 
             // When changing category
@@ -105,15 +101,13 @@ namespace Application.Services
         public async Task DeleteTransactionAsync(ClaimsPrincipal userClaims, int id)
         {
             var userId = _userManager.GetUserId(userClaims);
-            if (string.IsNullOrEmpty(userId))
-                throw new UnauthorizedAccessException("Invalid token");
 
             var transaction = await _transactionRepository.GetByIdAsync(id);
             if (transaction == null)
                 throw new KeyNotFoundException($"Transaction with ID {id} was not found.");
 
             if(transaction.Account.UserId != userId)
-                throw new UnauthorizedAccessException($"User does not have access to delete transaction with ID {id}");
+                throw new UnauthorizedAccessException($"User (ID:{userId}) does not have access to delete transaction with ID {id}");
 
             transaction.Account.RemoveTransactionFromBalance(transaction);
             
@@ -145,10 +139,15 @@ namespace Application.Services
 			if (string.IsNullOrEmpty(userId))
 				throw new UnauthorizedAccessException("Invalid token");
 
+            var userAccounts = await _accountRepository.GetAllUserAccountsAsync(userId);
+
             var transaction = await _transactionRepository.GetByIdAsync(transactionId);
 
             if (transaction == null)
                 return null;
+
+            if (!userAccounts.Any(a => a.Id == transaction.AccountId))
+                throw new UnauthorizedAccessException($"User (ID:{userId}) does not have access to transaction ID:{transactionId}");
 
             return transaction;
 		}
@@ -170,7 +169,7 @@ namespace Application.Services
                         (!filter.AccountId.HasValue || t.AccountId == filter.AccountId) &&
                         (!filter.CategoryId.HasValue || t.CategoryId == filter.CategoryId)
 				)
-                .OrderByDescending(t => t.Date)
+                //.OrderByDescending(t => t.Date)
                 .ToList();
 
             return filteredTransactions;

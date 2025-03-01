@@ -34,6 +34,7 @@ namespace WebAPI.Middleware
                 ArgumentException => (int)HttpStatusCode.BadRequest,
                 UnauthorizedAccessException => (int)HttpStatusCode.Unauthorized,
                 KeyNotFoundException => (int)HttpStatusCode.NotFound,
+                FormatException => (int)HttpStatusCode.BadRequest,
                 _ => (int)HttpStatusCode.InternalServerError
             };
 
