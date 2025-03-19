@@ -25,6 +25,19 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// CORS configuration
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:3000")
+            .AllowCredentials()
+            .WithMethods(["GET", "POST", "PUT", "DELETE"])  
+            .AllowAnyHeader(); 
+    });
+});
+
 // Database configuration
 builder.Services.AddDbContext<AppDbContext>(
     options => options.UseSqlServer(
@@ -114,6 +127,9 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddControllers();
 
 var app = builder.Build();
+
+// Apply the CORS middleware
+app.UseCors("AllowAll");
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 

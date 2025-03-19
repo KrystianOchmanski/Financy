@@ -52,30 +52,44 @@ namespace WebAPI.Controllers
                 return Unauthorized("Invalid email or password");
             }
 
+            
+            Response.Cookies.Append("refreshToken", result.Value.RefreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict
+            });
+
             return Ok(new
             {
                 AccessToken = result.Value.Token,
-                RefreshToken = result.Value.RefreshToken
             });
         }
 
         /// <summary>
         /// Refreshes an access token.
-        /// </summary>
-        /// <param name="refreshToken">Refresh token.</param>
+        /// </summary>        
         /// <returns>Returns a new access token.</returns>
         /// <response code="200">Token refreshed successfully.</response>
         /// <response code="401">Invalid refresh token.</response>
         [HttpPost("refresh-token")]
-        public IActionResult RefreshToken([FromBody] RefreshTokenDTO refreshToken)
+        public IActionResult RefreshToken()
         {
-            var newToken = _authService.RefreshToken(refreshToken.RefreshToken);
+            var refreshToken = Request.Cookies["refreshToken"];
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                return Unauthorized("No refresh token provided.");
+            }
+
+            var newToken = _authService.RefreshToken(refreshToken);
             if (newToken == null)
             {
                 return Unauthorized("Invalid refresh token");
             }
+
             return Ok(new { AccessToken = newToken });
         }
+
 
         /// <summary>
         /// Logs out the current user.
