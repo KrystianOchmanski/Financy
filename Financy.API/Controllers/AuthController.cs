@@ -98,13 +98,10 @@ namespace WebAPI.Controllers
         /// <returns>Logout confirmation message.</returns>
         /// <response code="200">Logout successful.</response>
         /// <response code="400">Logout failed.</response>
-        [Authorize]
-        [HttpPost("logout")]
+        [HttpGet("logout")]
         public async Task<IActionResult> Logout()
         {
-            await _authService.LogoutAsync(User);
-
-            Response.Cookies.Delete("refreshToken");
+            await _authService.LogoutAsync(HttpContext);
 
             return Ok("User logged out successfully.");
         }

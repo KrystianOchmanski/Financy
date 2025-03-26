@@ -1,5 +1,6 @@
 ﻿using Domain;
 using Financy.Application.DTOs.Auth;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 
@@ -11,7 +12,7 @@ public interface IAuthService
 
     Task<IdentityResult> RegisterAsync(RegisterDTO registerDTO);
 
-    Task LogoutAsync(ClaimsPrincipal userClaims);
+    Task LogoutAsync(HttpContext httpContext);
 
     Task<IdentityResult> ChangePasswordAsync(string userId, string currentPassword, string newPassword);
 }
