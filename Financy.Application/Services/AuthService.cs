@@ -1,8 +1,12 @@
-﻿using Domain;
+﻿using Application.Configuration;
+using Domain;
 using Financy.Application.DTOs.Auth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 
 public class AuthService : IAuthService
 {
@@ -24,10 +28,9 @@ public class AuthService : IAuthService
         }
 
         var token = _jwtService.GenerateToken(user.Id, user.Email!);
-        var refreshToken = _jwtService.GenerateRefreshToken();
+        var refreshToken = _jwtService.GenerateRefreshToken(user.Id);
 
         user.RefreshToken = refreshToken;
-        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
 
         var updateResult = await _userManager.UpdateAsync(user);
         if (!updateResult.Succeeded)
@@ -40,15 +43,32 @@ public class AuthService : IAuthService
 
     public string? RefreshToken(string refreshToken)
     {
-        var user = _userManager.Users.FirstOrDefault(u => u.RefreshToken == refreshToken);
-        if (user == null || user.RefreshTokenExpiryTime < DateTime.UtcNow)
+        var principal = _jwtService.ValidateToken(refreshToken);
+        if (principal == null)
         {
             return null;
         }
 
-        var newToken = _jwtService.GenerateToken(user.Id, user.Email!);
-        return newToken;
+        foreach (var claim in principal.Claims)
+        {
+            Console.WriteLine($"Claim Type: {claim.Type}, Value: {claim.Value}");
+        }
+
+        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
+        {
+            return null;
+        }
+
+        var user = _userManager.Users.FirstOrDefault(u => u.Id == userId);
+        if (user == null)
+        {
+            return null;
+        }
+
+        return _jwtService.GenerateToken(user.Id, user.Email!);
     }
+
 
     public async Task<IdentityResult> RegisterAsync(RegisterDTO registerDTO)
     {
@@ -75,7 +95,6 @@ public class AuthService : IAuthService
         }
 
         user.RefreshToken = null;
-        user.RefreshTokenExpiryTime = null;
 
         var result = await _userManager.UpdateAsync(user);
         if (!result.Succeeded)
