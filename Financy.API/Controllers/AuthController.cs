@@ -57,7 +57,8 @@ namespace WebAPI.Controllers
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict
+                SameSite = SameSiteMode.Strict,
+                Path = "/"
             });
 
             return Ok(new
@@ -72,7 +73,7 @@ namespace WebAPI.Controllers
         /// <returns>Returns a new access token.</returns>
         /// <response code="200">Token refreshed successfully.</response>
         /// <response code="401">Invalid refresh token.</response>
-        [HttpPost("refresh-token")]
+        [HttpGet("refreshToken")]
         public IActionResult RefreshToken()
         {
             var refreshToken = Request.Cookies["refreshToken"];
@@ -102,6 +103,8 @@ namespace WebAPI.Controllers
         public async Task<IActionResult> Logout()
         {
             await _authService.LogoutAsync(User);
+
+            Response.Cookies.Delete("refreshToken");
 
             return Ok("User logged out successfully.");
         }
