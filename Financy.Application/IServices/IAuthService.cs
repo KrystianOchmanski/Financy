@@ -12,7 +12,7 @@ public interface IAuthService
 
     Task<IdentityResult> RegisterAsync(RegisterDTO registerDTO);
 
-    Task LogoutAsync(HttpContext httpContext);
+    Task LogoutAsync(string refreshToken);
 
     Task<IdentityResult> ChangePasswordAsync(string userId, string currentPassword, string newPassword);
 }

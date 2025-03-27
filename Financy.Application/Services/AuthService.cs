@@ -1,12 +1,7 @@
-﻿using Application.Configuration;
-using Domain;
+﻿using Domain;
 using Financy.Application.DTOs.Auth;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 
 public class AuthService : IAuthService
 {
@@ -81,13 +76,8 @@ public class AuthService : IAuthService
         return await _userManager.CreateAsync(newUser, registerDTO.Password);
     }
 
-    public async Task LogoutAsync(HttpContext httpContext)
+    public async Task LogoutAsync(string refreshToken)
     {
-        if (!httpContext.Request.Cookies.TryGetValue("refreshToken", out var refreshToken) || string.IsNullOrWhiteSpace(refreshToken))
-        {
-            throw new ArgumentException("Invalid token");
-        }
-
         var user = _userManager.Users.FirstOrDefault(u => u.RefreshToken == refreshToken);
         if (user == null)
         {
@@ -100,9 +90,7 @@ public class AuthService : IAuthService
         if (!result.Succeeded)
         {
             throw new Exception("User update went wrong");
-        }
-
-        httpContext.Response.Cookies.Delete("refreshToken");
+        }   
     }
 
 

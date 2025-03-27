@@ -52,19 +52,12 @@ namespace WebAPI.Controllers
                 return Unauthorized("Invalid email or password");
             }
 
-            
-            Response.Cookies.Append("refreshToken", result.Value.RefreshToken, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Path = "/"
-            });
-
             return Ok(new
             {
                 AccessToken = result.Value.Token,
+                result.Value.RefreshToken,
             });
+            //return Ok();
         }
 
         /// <summary>
@@ -98,10 +91,10 @@ namespace WebAPI.Controllers
         /// <returns>Logout confirmation message.</returns>
         /// <response code="200">Logout successful.</response>
         /// <response code="400">Logout failed.</response>
-        [HttpGet("logout")]
-        public async Task<IActionResult> Logout()
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout(string refreshToken)
         {
-            await _authService.LogoutAsync(HttpContext);
+            await _authService.LogoutAsync(refreshToken);
 
             return Ok("User logged out successfully.");
         }
