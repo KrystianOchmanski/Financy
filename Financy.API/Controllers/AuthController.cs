@@ -57,7 +57,6 @@ namespace WebAPI.Controllers
                 AccessToken = result.Value.Token,
                 result.Value.RefreshToken,
             });
-            //return Ok();
         }
 
         /// <summary>
@@ -66,10 +65,9 @@ namespace WebAPI.Controllers
         /// <returns>Returns a new access token.</returns>
         /// <response code="200">Token refreshed successfully.</response>
         /// <response code="401">Invalid refresh token.</response>
-        [HttpGet("refreshToken")]
-        public IActionResult RefreshToken()
-        {
-            var refreshToken = Request.Cookies["refreshToken"];
+        [HttpPost("refreshToken")]
+        public IActionResult RefreshToken([FromBody] string refreshToken)
+        {            
             if (string.IsNullOrEmpty(refreshToken))
             {
                 return Unauthorized("No refresh token provided.");
@@ -92,7 +90,7 @@ namespace WebAPI.Controllers
         /// <response code="200">Logout successful.</response>
         /// <response code="400">Logout failed.</response>
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout(string refreshToken)
+        public async Task<IActionResult> Logout([FromBody] string refreshToken)
         {
             await _authService.LogoutAsync(refreshToken);
 

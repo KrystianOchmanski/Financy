@@ -28,10 +28,10 @@ builder.Services.AddSwaggerGen();
 // CORS configuration
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("http://localhost:3000")
+            .WithOrigins("https://localhost:3000")
             .AllowCredentials()
             .WithMethods(["GET", "POST", "PUT", "DELETE"])  
             .AllowAnyHeader(); 
@@ -129,7 +129,7 @@ builder.Services.AddControllers();
 var app = builder.Build();
 
 // Apply the CORS middleware
-app.UseCors("AllowAll");
+app.UseCors("AllowFrontend");
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 

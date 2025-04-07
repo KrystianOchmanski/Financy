@@ -44,11 +44,6 @@ public class AuthService : IAuthService
             return null;
         }
 
-        foreach (var claim in principal.Claims)
-        {
-            Console.WriteLine($"Claim Type: {claim.Type}, Value: {claim.Value}");
-        }
-
         var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null)
         {
@@ -57,6 +52,11 @@ public class AuthService : IAuthService
 
         var user = _userManager.Users.FirstOrDefault(u => u.Id == userId);
         if (user == null)
+        {
+            return null;
+        }
+
+        if(user.RefreshToken != refreshToken)
         {
             return null;
         }
