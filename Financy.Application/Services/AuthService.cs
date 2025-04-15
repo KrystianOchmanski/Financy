@@ -104,4 +104,17 @@ public class AuthService : IAuthService
 
         return await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
     }
+
+    public async Task<string> GetUserName(ClaimsPrincipal claimsPrincipal)
+    {
+        var userId = _userManager.GetUserId(claimsPrincipal);
+        if (userId == null)
+            throw new UnauthorizedAccessException("Invalid token");
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new ArgumentException("User not found");
+
+        return user.FirstName;
+    }
 }

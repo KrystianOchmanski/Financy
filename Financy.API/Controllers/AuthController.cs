@@ -96,5 +96,14 @@ namespace WebAPI.Controllers
 
             return Ok("User logged out successfully.");
         }
+
+        [HttpGet("name")]
+        [Authorize]
+        public async Task<IActionResult> GetName()
+        {
+            var name = await _authService.GetUserName(User);
+
+            return Ok(name);
+        }
     }
 }
