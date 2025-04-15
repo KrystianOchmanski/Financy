@@ -69,13 +69,13 @@ namespace Financy.Application.Services
             return account;
         }
 
-        public async Task<List<AccountDTO>> GetUserAccountsAsync(ClaimsPrincipal userClaims)
+        public async Task<List<AccountDTO>> GetUserAccountsAsync(ClaimsPrincipal userClaims, bool includeTransactions)
         {
             var userId = _userManager.GetUserId(userClaims);
             if (string.IsNullOrEmpty(userId))
                 throw new UnauthorizedAccessException("Invalid token");
 
-            var userAccounts = await _accountRepository.GetAllUserAccountsAsync(userId, true);
+            var userAccounts = await _accountRepository.GetAllUserAccountsAsync(userId, includeTransactions);
             var userAccountsDto = userAccounts.Select(a => new AccountDTO(a)).ToList();
 
             return userAccountsDto;

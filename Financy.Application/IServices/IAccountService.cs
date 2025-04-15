@@ -7,7 +7,7 @@ namespace Financy.Application.IServices
     {
         Task<AccountDTO?> GetByIdAsync(ClaimsPrincipal userClaims, int id);
 
-        Task<List<AccountDTO>> GetUserAccountsAsync(ClaimsPrincipal userClaims);
+        Task<List<AccountDTO>> GetUserAccountsAsync(ClaimsPrincipal userClaims, bool includeTransactions);
 
         Task<AccountDTO> AddUserAccountAsync(ClaimsPrincipal userClaims, CreateAccountDTO accountDTO);
 

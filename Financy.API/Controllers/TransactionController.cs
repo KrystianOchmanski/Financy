@@ -2,6 +2,7 @@
 using Financy.Application.DTOs.TransactionDTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Domain;
 
 namespace WebAPI.Controllers
 {
@@ -22,6 +23,26 @@ namespace WebAPI.Controllers
         {
             var transactions = await _transactionService.GetAllUserTransactionsAsync(User);
             return Ok(transactions);
+        }
+
+        [HttpGet("incomes")]
+        public async Task<IActionResult> GetIncomes(string startDate)
+        {
+            var filter = new TransactionFilterDTO { Type = TransactionType.Income, StartDate = startDate};
+            var filteredTransactions = await _transactionService.GetFilteredTransactionsAsync(User, filter);
+            decimal incomes = filteredTransactions.Aggregate((decimal)0, (sum, t) => sum + t.Amount);
+
+            return Ok(incomes);
+        }
+
+        [HttpGet("expenses")]
+        public async Task<IActionResult> GetExpenses(string startDate)
+        {
+            var filter = new TransactionFilterDTO { Type = TransactionType.Expense, StartDate = startDate };
+            var filteredTransactions = await _transactionService.GetFilteredTransactionsAsync(User, filter);
+            decimal expenses = filteredTransactions.Aggregate((decimal)0, (sum, t) => sum + t.Amount);
+
+            return Ok(expenses);
         }
 
         [HttpGet("{id}")]
