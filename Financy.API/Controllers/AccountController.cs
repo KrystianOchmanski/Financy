@@ -27,7 +27,7 @@ namespace Financy.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetUserAccounts()
         {
-            bool includeTransactions = true;
+            bool includeTransactions = false;
             var userAccounts = await _accountService.GetUserAccountsAsync(User, includeTransactions);
             return Ok(userAccounts);
         }
