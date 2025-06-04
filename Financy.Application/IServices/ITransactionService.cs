@@ -7,6 +7,8 @@ namespace Application.IServices
     {
         Task<IEnumerable<TransactionDTO>> GetAllUserTransactionsAsync(ClaimsPrincipal userClaims);
 
+        Task<IEnumerable<TransactionDTO>> GetLastUserTransactionsAsync(ClaimsPrincipal userClaims, int size);
+
         Task<TransactionDTO?> GetTransactionByIdAsync(ClaimsPrincipal userClaims, int transactionId);
 
         Task<IEnumerable<TransactionDTO>> GetFilteredTransactionsAsync(ClaimsPrincipal userClaims, TransactionFilterDTO filter);

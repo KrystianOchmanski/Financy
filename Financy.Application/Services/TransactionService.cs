@@ -133,6 +133,23 @@ namespace Application.Services
             return userTransactions.OrderByDescending(t => t.Date);
         }
 
+        public async Task<IEnumerable<TransactionDTO>> GetLastUserTransactionsAsync(ClaimsPrincipal userClaims, int size)
+        {
+            var userId = _userManager.GetUserId(userClaims);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Invalid token");
+
+            var userAccounts = await _accountRepository.GetAllUserAccountWithLastTransactionsAsync(userId, size);
+
+            var userLastTransactions = new List<TransactionDTO>();
+            foreach (var account in userAccounts)
+            {
+                userLastTransactions.AddRange(account.Transactions.Select(t => new TransactionDTO(t)));
+            }
+
+            return userLastTransactions.OrderByDescending(t => t.Date).Take(size);
+        }
+
         public async Task<TransactionDTO?> GetTransactionByIdAsync(ClaimsPrincipal userClaims, int transactionId)
         {
 			var userId = _userManager.GetUserId(userClaims);

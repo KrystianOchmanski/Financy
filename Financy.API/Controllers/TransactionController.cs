@@ -25,6 +25,13 @@ namespace WebAPI.Controllers
             return Ok(transactions);
         }
 
+        [HttpGet("last")]
+        public async Task<IActionResult> GetLastUserTransactions([FromQuery] int size)
+        {
+            var transactions = await _transactionService.GetLastUserTransactionsAsync(User, size);
+            return Ok(transactions);
+        }
+
         [HttpGet("incomes")]
         public async Task<IActionResult> GetIncomes(string startDate)
         {

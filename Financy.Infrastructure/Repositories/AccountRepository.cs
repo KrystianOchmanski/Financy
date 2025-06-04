@@ -45,6 +45,24 @@ namespace Infrastructure.Repositories
             }
         }
 
+        public async Task<IEnumerable<Account>> GetAllUserAccountWithLastTransactionsAsync(string userId, int size)
+        {
+            return await _context.Accounts
+                .Where(a => a.UserId == userId)
+                .Select(a => new Account
+                {
+                    Id = a.Id,
+                    Name = a.Name,
+                    Balance = a.Balance,
+                    UserId = a.UserId,
+                    Transactions = a.Transactions
+                        .OrderByDescending(t => t.Date)
+                        .Take(size)
+                        .ToList()
+                })
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Account>> GetAllUserAccountsAsync(string userId, bool includeTransactions = false)
         {
             return await BuildIncludeQuery(includeTransactions)
