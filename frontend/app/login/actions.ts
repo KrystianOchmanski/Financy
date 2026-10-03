@@ -31,11 +31,14 @@ export async function login(prevState: any, formData: FormData) {
   const { accessToken, refreshToken } = await response.json();
 
   const cookieStore = await cookies();
+  const isProduction = process.env.NODE_ENV === "production";
 
   cookieStore.set("refreshToken", refreshToken, {
     httpOnly: true,
-    secure: true,
-    sameSite: "strict",
+    secure: isProduction,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7,
   });
 
   return { accessToken };

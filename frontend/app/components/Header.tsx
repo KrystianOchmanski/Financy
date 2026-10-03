@@ -10,7 +10,7 @@ export default function Header() {
   const router = useRouter();
 
   const logout = async () => {
-    await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/logout`);
+    await fetch("/api/auth/logout");
     clearAccessToken();
     router.push("/login");
   };

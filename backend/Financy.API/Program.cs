@@ -26,15 +26,21 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // CORS configuration
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+if (allowedOrigins == null || allowedOrigins.Length == 0)
+{
+    allowedOrigins = ["https://localhost:3000", "http://localhost:3000"];
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("https://localhost:3000")
+            .WithOrigins(allowedOrigins)
             .AllowCredentials()
-            .WithMethods(["GET", "POST", "PUT", "DELETE"])  
-            .AllowAnyHeader(); 
+            .AllowAnyMethod()
+            .AllowAnyHeader();
     });
 });
 
@@ -140,8 +146,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -43,12 +43,9 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const data = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/refreshToken`,
-          {
-            credentials: "include",
-          }
-        );
+        const data = await fetch("/api/auth/refreshToken", {
+          credentials: "include",
+        });
 
         if (!data.ok) throw Error("Refreshing token failed");
 
