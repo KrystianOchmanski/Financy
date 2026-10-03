@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Financy.Domain;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
@@ -37,5 +38,9 @@ namespace Domain
 
         [JsonIgnore]
         public Category Category { get; set; } = null!;
+
+        public TransferDirection? TransferDirection { get; set; } = null;
+
+        public Guid? TransferGroupId { get; set; } = null;
     }
 }
