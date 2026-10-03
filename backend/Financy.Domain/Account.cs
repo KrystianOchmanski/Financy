@@ -11,9 +11,12 @@ namespace Domain
         [Required(ErrorMessage = "Account name is required")]
         public string Name { get; set; } = null!;
 
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal InitialBalance { get; set; }
+
         [Range(0, double.MaxValue, ErrorMessage = "Balance cannot be negative")]
         [Column(TypeName = "decimal(18,2)")]
-        public decimal Balance { get; set; } = 0;
+        public decimal Balance { get; set; }
 
         [JsonIgnore]
         public List<Transaction> Transactions { get; set; } = new List<Transaction>();

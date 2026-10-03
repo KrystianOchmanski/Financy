@@ -9,7 +9,7 @@ namespace Financy.Application.DTOs.AccountDTOs
 
         public string Name { get; set; } = string.Empty;
 
-        public decimal Balance { get; set; }
+        public decimal InitialBalance { get; set; }
 
         public List<TransactionDTO> Transactions { get; set; } = new List<TransactionDTO>();
 
@@ -17,7 +17,7 @@ namespace Financy.Application.DTOs.AccountDTOs
         { 
             Id = account.Id;
             Name = account.Name;
-            Balance = account.Balance;
+            InitialBalance = account.InitialBalance;
             Transactions = account.Transactions.Select(t => new TransactionDTO(t)).ToList();
         }
 
