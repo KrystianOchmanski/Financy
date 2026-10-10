@@ -1,10 +1,10 @@
-﻿using Application.IServices;
+﻿using Financy.Application.IServices;
 using Financy.Application.DTOs.TransactionDTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Domain;
 
-namespace WebAPI.Controllers
+namespace Financy.API.Controllers
 {
 	[Route("api/transaction")]
     [ApiController]

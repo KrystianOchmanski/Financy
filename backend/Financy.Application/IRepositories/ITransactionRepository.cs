@@ -1,6 +1,6 @@
-﻿using System.Linq.Expressions;
+﻿using Domain;
 
-namespace Domain.Interfaces
+namespace Financy.Application.IRepositories
 {
     public interface ITransactionRepository
     {

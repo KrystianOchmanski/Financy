@@ -2,17 +2,20 @@
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 
-public interface IAuthService
+namespace Financy.Application.IServices
 {
-    Task<(string Token, string RefreshToken)?> LoginAsync(LoginDTO loginDTO);
+    public interface IAuthService
+    {
+        Task<(string Token, string RefreshToken)?> LoginAsync(LoginDTO loginDTO);
 
-    string? RefreshToken(string refreshToken);
+        string? RefreshToken(string refreshToken);
 
-    Task<IdentityResult> RegisterAsync(RegisterDTO registerDTO);
+        Task<IdentityResult> RegisterAsync(RegisterDTO registerDTO);
 
-    Task LogoutAsync(string refreshToken);
+        Task LogoutAsync(string refreshToken);
 
-    Task<IdentityResult> ChangePasswordAsync(string userId, string currentPassword, string newPassword);
+        Task<IdentityResult> ChangePasswordAsync(string userId, string currentPassword, string newPassword);
 
-    Task<string> GetUserName(ClaimsPrincipal claimsPrincipal);
+        Task<string> GetUserName(ClaimsPrincipal claimsPrincipal);
+    }
 }

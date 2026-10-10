@@ -1,4 +1,6 @@
-﻿namespace Domain.Interfaces
+﻿using Domain;
+
+namespace Financy.Application.IRepositories
 {
     public interface ICategoryRepository
     {

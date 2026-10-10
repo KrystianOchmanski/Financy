@@ -1,4 +1,4 @@
-﻿namespace Application.IRepositories
+﻿namespace Financy.Application.IRepositories
 {
     public interface IUnitOfWork : IDisposable
     {

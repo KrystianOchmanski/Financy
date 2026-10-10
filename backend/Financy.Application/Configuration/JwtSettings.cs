@@ -1,4 +1,4 @@
-﻿namespace Application.Configuration
+﻿namespace Financy.Application.Configuration
 {
     public class JwtSettings
     {

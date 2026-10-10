@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Domain.Interfaces;
 using Domain;
+using Financy.Application.IRepositories;
 
 namespace Infrastructure.Repositories
 {

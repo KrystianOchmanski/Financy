@@ -1,9 +1,6 @@
-﻿using Application.Configuration;
-using Application.IRepositories;
-using Application.IServices;
-using Application.Services;
-using Domain;
-using Domain.Interfaces;
+﻿using Domain;
+using Financy.Application.Configuration;
+using Financy.Application.IRepositories;
 using Financy.Application.IServices;
 using Financy.Application.Services;
 using Infrastructure;

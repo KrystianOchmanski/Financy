@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Domain.Interfaces;
 using Domain;
-using System.Linq.Expressions;
+using Financy.Application.IRepositories;
 
 namespace Infrastructure.Repositories
 {

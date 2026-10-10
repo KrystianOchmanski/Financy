@@ -1,8 +1,9 @@
 ﻿using Financy.Application.DTOs.Auth;
+using Financy.Application.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace WebAPI.Controllers
+namespace Financy.API.Controllers
 {
     /// <summary>
     /// Controller for user authentication and authorization.

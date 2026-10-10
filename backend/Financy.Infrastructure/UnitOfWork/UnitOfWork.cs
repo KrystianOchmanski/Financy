@@ -1,4 +1,4 @@
-﻿using Application.IRepositories;
+﻿using Financy.Application.IRepositories;
 
 namespace Infrastructure.UnitOfWork
 {

@@ -1,7 +1,7 @@
 ﻿using Financy.Application.DTOs.TransactionDTOs;
 using System.Security.Claims;
 
-namespace Application.IServices
+namespace Financy.Application.IServices
 {
     public interface ITransactionService
     {

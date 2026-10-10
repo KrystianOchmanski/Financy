@@ -2,84 +2,87 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Application.Configuration;
+using Financy.Application.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-public class JwtService
+namespace Financy.Application.Services
 {
-    private readonly JwtSettings _jwtSettings;
-
-    public JwtService(IOptions<JwtSettings> jwtSettings)
+    public class JwtService
     {
-        _jwtSettings = jwtSettings.Value;
-    }
+        private readonly JwtSettings _jwtSettings;
 
-    public string GenerateToken(string userId, string email)
-    {
-        return GenerateJwtToken(userId, email, _jwtSettings.ExpiryMinutes);
-    }
-
-    public string GenerateRefreshToken(string userId)
-    {
-        return GenerateJwtToken(userId, null, 10080); // 7 days (7 * 24 * 60 min)
-    }
-
-    private string GenerateJwtToken(string userId, string? email, int expiryMinutes)
-    {
-        var claims = new List<Claim>
+        public JwtService(IOptions<JwtSettings> jwtSettings)
         {
-            new Claim(JwtRegisteredClaimNames.Sub, userId),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
-
-        if (!string.IsNullOrEmpty(email))
-        {
-            claims.Add(new Claim(JwtRegisteredClaimNames.Email, email));
+            _jwtSettings = jwtSettings.Value;
         }
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var tokenDescriptor = new SecurityTokenDescriptor
+        public string GenerateToken(string userId, string email)
         {
-            Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddMinutes(expiryMinutes),
-            Issuer = _jwtSettings.Issuer,
-            Audience = _jwtSettings.Audience,
-            SigningCredentials = credentials
-        };
+            return GenerateJwtToken(userId, email, _jwtSettings.ExpiryMinutes);
+        }
 
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-
-        return tokenHandler.WriteToken(token);
-    }
-
-    public ClaimsPrincipal? ValidateToken(string token)
-    {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes(_jwtSettings.SecretKey);
-
-        try
+        public string GenerateRefreshToken(string userId)
         {
-            var validationParameters = new TokenValidationParameters
+            return GenerateJwtToken(userId, null, 10080); // 7 days (7 * 24 * 60 min)
+        }
+
+        private string GenerateJwtToken(string userId, string? email, int expiryMinutes)
+        {
+            var claims = new List<Claim>
             {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = _jwtSettings.Issuer,
-                ValidAudience = _jwtSettings.Audience,
-                IssuerSigningKey = new SymmetricSecurityKey(key),
-                ClockSkew = TimeSpan.Zero,
+                new Claim(JwtRegisteredClaimNames.Sub, userId),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            return tokenHandler.ValidateToken(token, validationParameters, out _);
+            if (!string.IsNullOrEmpty(email))
+            {
+                claims.Add(new Claim(JwtRegisteredClaimNames.Email, email));
+            }
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddMinutes(expiryMinutes),
+                Issuer = _jwtSettings.Issuer,
+                Audience = _jwtSettings.Audience,
+                SigningCredentials = credentials
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
         }
-        catch
+
+        public ClaimsPrincipal? ValidateToken(string token)
         {
-            return null; // Token invalid or expired
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_jwtSettings.SecretKey);
+
+            try
+            {
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = _jwtSettings.Issuer,
+                    ValidAudience = _jwtSettings.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ClockSkew = TimeSpan.Zero,
+                };
+
+                return tokenHandler.ValidateToken(token, validationParameters, out _);
+            }
+            catch
+            {
+                return null; // Token invalid or expired
+            }
         }
     }
 }
