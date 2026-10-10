@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text.Json;
+using Financy.Application.Exceptions;
 
 namespace WebAPI.Middleware
 {
@@ -32,6 +33,7 @@ namespace WebAPI.Middleware
             var statusCode = exception switch
             {
                 ArgumentException => (int)HttpStatusCode.BadRequest,
+                ForbiddenAccessException => (int)HttpStatusCode.Forbidden,
                 UnauthorizedAccessException => (int)HttpStatusCode.Unauthorized,
                 KeyNotFoundException => (int)HttpStatusCode.NotFound,
                 FormatException => (int)HttpStatusCode.BadRequest,
@@ -41,8 +43,7 @@ namespace WebAPI.Middleware
             var response = new
             {
                 StatusCode = statusCode,
-                Message = exception.Message,
-                Details = exception.StackTrace
+                Message = exception.Message
             };
 
             context.Response.ContentType = "application/json";
