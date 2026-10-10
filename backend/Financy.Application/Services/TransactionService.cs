@@ -1,5 +1,6 @@
 ﻿using Domain;
 using Financy.Application.DTOs.TransactionDTOs;
+using Financy.Application.Exceptions;
 using Financy.Application.IRepositories;
 using Financy.Application.IServices;
 using Microsoft.AspNetCore.Identity;
@@ -26,13 +27,15 @@ namespace Financy.Application.Services
         public async Task<TransactionDTO> AddTransactionAsync(ClaimsPrincipal userClaims, CreateTransactionDTO transactionDto)
         {
             var userId = _userManager.GetUserId(userClaims);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Invalid token");
 
             var account = await _accountRepository.GetByIdAsync(transactionDto.AccountId);
             if (account == null)
                 throw new KeyNotFoundException($"Account with ID {transactionDto.AccountId} was not found.");
 
             if (account.UserId != userId)
-                throw new UnauthorizedAccessException($"User (ID:{userId}) does not have access to add transaction to account ID:{transactionDto.AccountId}");
+                throw new ForbiddenAccessException($"User (ID:{userId}) does not have access to add transaction to account ID:{transactionDto.AccountId}");
 
             var category = await _categoryRepository.GetByIdAsync(transactionDto.CategoryId);
             if (category == null)
@@ -52,6 +55,8 @@ namespace Financy.Application.Services
         public async Task<TransactionDTO> UpdateTransactionAsync(ClaimsPrincipal userClaims, EditTransactionDTO editedTransaction)
         {
             var userId = _userManager.GetUserId(userClaims);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Invalid token");
 
             var transaction = await _transactionRepository.GetByIdAsync(editedTransaction.Id);
 
@@ -59,7 +64,7 @@ namespace Financy.Application.Services
                 throw new KeyNotFoundException($"Transaction with ID {editedTransaction.Id} was not found.");
 
             if (transaction.Account.UserId != userId)
-                throw new UnauthorizedAccessException($"User (ID:{userId}) does not have access to update transaction with ID {editedTransaction.Id}");
+                throw new ForbiddenAccessException($"User (ID:{userId}) does not have access to update transaction with ID {editedTransaction.Id}");
 
 
             // When changing category
@@ -85,13 +90,15 @@ namespace Financy.Application.Services
         public async Task DeleteTransactionAsync(ClaimsPrincipal userClaims, int id)
         {
             var userId = _userManager.GetUserId(userClaims);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Invalid token");
 
             var transaction = await _transactionRepository.GetByIdAsync(id);
             if (transaction == null)
                 throw new KeyNotFoundException($"Transaction with ID {id} was not found.");
 
             if(transaction.Account.UserId != userId)
-                throw new UnauthorizedAccessException($"User (ID:{userId}) does not have access to delete transaction with ID {id}");
+                throw new ForbiddenAccessException($"User (ID:{userId}) does not have access to delete transaction with ID {id}");
 
             _transactionRepository.DeleteTransaction(transaction);
             await _unitOfWork.SaveChangesAsync();
@@ -137,15 +144,13 @@ namespace Financy.Application.Services
 			if (string.IsNullOrEmpty(userId))
 				throw new UnauthorizedAccessException("Invalid token");
 
-            var userAccounts = await _accountRepository.GetAllUserAccountsAsync(userId);
-
             var transaction = await _transactionRepository.GetByIdAsync(transactionId);
 
             if (transaction == null)
                 return null;
 
-            if (!userAccounts.Any(a => a.Id == transaction.AccountId))
-                throw new UnauthorizedAccessException($"User (ID:{userId}) does not have access to transaction ID:{transactionId}");
+            if (transaction.Account.UserId != userId)
+                throw new ForbiddenAccessException($"User (ID:{userId}) does not have access to transaction ID:{transactionId}");
 
             return transaction;
 		}

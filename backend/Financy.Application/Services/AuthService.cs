@@ -1,6 +1,7 @@
 ﻿using Domain;
 using Financy.Application.DTOs.Auth;
 using Financy.Application.IServices;
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 
@@ -47,7 +48,7 @@ namespace Financy.Application.Services
                 return null;
             }
 
-            var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
             if (userId == null)
             {
                 return null;

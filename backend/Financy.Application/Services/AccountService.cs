@@ -1,5 +1,6 @@
 ﻿using Domain;
 using Financy.Application.DTOs.AccountDTOs;
+using Financy.Application.Exceptions;
 using Financy.Application.IRepositories;
 using Financy.Application.IServices;
 using Microsoft.AspNetCore.Identity;
@@ -45,7 +46,7 @@ namespace Financy.Application.Services
                 throw new KeyNotFoundException($"Account with ID:{id} was not found");
 
             if (account.UserId != userId)
-                throw new UnauthorizedAccessException($"User (ID:{userId}) does not have access to account (ID:{account.Id})");
+                throw new ForbiddenAccessException($"User (ID:{userId}) does not have access to account (ID:{account.Id})");
 
             var result = _accountRepository.DeleteAccount(account);
 
@@ -58,6 +59,8 @@ namespace Financy.Application.Services
         public async Task<AccountDTO?> GetByIdAsync(ClaimsPrincipal userClaims, int id)
         {
             var userId = _userManager.GetUserId(userClaims);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Invalid token");
 
             var account = await _accountRepository.GetByIdAsync(id);
 
@@ -65,7 +68,7 @@ namespace Financy.Application.Services
                 throw new KeyNotFoundException($"Account ID:{id} was not found.");
 
             if (account.UserId != userId)
-                throw new UnauthorizedAccessException($"User (ID:{userId}) does not have access to account ID:{id}.");
+                throw new ForbiddenAccessException($"User (ID:{userId}) does not have access to account ID:{id}.");
 
             var balance = await _accountRepository.GetAccountBalanceAsync(id);
             return new AccountDTO(account, balance);
@@ -78,7 +81,7 @@ namespace Financy.Application.Services
                 throw new UnauthorizedAccessException("Invalid token");
 
             var userAccounts = await _accountRepository.GetAllUserAccountsAsync(userId);
-            var userAccountsDto = new List<AccountDTO>((IEnumerable<AccountDTO>)userAccounts);
+            var userAccountsDto = new List<AccountDTO>(userAccounts.Select(account => new AccountDTO(account, null)));
 
             return userAccountsDto;
         }
@@ -103,7 +106,7 @@ namespace Financy.Application.Services
                 throw new KeyNotFoundException($"Account ID:{accountId} was not found.");
 
             if (account.UserId != userId)
-                throw new UnauthorizedAccessException($"User (ID:{userId}) does not have access to account ID:{accountId}.");
+                throw new ForbiddenAccessException($"User (ID:{userId}) does not have access to account ID:{accountId}.");
 
             return await _accountRepository.GetAccountBalanceAsync(accountId);
         }
