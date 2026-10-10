@@ -27,20 +27,23 @@ namespace Financy.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetUserAccounts()
         {
-            bool includeTransactions = false;
-            var userAccounts = await _accountService.GetUserAccountsAsync(User, includeTransactions);
+            var userAccounts = await _accountService.GetUserAccountsAsync(User);
             return Ok(userAccounts);
         }
 
-        //[HttpGet("balance")]
-        //public async Task<IActionResult> GetBalance()
-        //{
-        //    bool includeTransactions = false;
-        //    var userAccounts = await _accountService.GetUserAccountsAsync(User, includeTransactions);
-        //    decimal balance = userAccounts.Aggregate((decimal)0, (sum, a) => sum + a.Balance);
-            
-        //    return Ok(balance);
-        //}
+        [HttpGet("balance")]
+        public async Task<IActionResult> GetUserBalance()
+        {
+            decimal balance = await _accountService.GetUserBalance(User);
+            return Ok(balance);
+        }
+
+        [HttpGet("{id}/balance")]
+        public async Task<IActionResult> GetAccountBalance(int id)
+        {
+            decimal balance = await _accountService.GetAccountBalance(User, id);
+            return Ok(balance);
+        }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)

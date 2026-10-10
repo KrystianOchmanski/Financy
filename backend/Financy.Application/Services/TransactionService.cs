@@ -1,12 +1,11 @@
-﻿using Application.IRepositories;
-using Application.IServices;
-using Domain;
-using Domain.Interfaces;
+﻿using Domain;
 using Financy.Application.DTOs.TransactionDTOs;
+using Financy.Application.IRepositories;
+using Financy.Application.IServices;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 
-namespace Application.Services
+namespace Financy.Application.Services
 {
 	public class TransactionService : ITransactionService
     {
@@ -40,15 +39,11 @@ namespace Application.Services
                 throw new KeyNotFoundException($"Category with ID {transactionDto.CategoryId} was not found.");
 
             var transaction = (Transaction)transactionDto;
-
-            // Updating account balance
-            account.AddTransactionToBalance(transaction);
             
             transaction.Account = account;
             transaction.Category = category;
 
             var addedTransaction = await _transactionRepository.CreateTransactionAsync(transaction);
-            _accountRepository.UpdateAccount(account);
             await _unitOfWork.SaveChangesAsync();
             return addedTransaction;
         }
@@ -77,17 +72,6 @@ namespace Application.Services
                 transaction.Category = newCategory;
             }
 
-            // When changing amount
-            if(transaction.Amount != editedTransaction.Amount)
-            {
-                var account = await _accountRepository.GetByIdAsync(transaction.AccountId);
-                if (account == null)
-                    throw new KeyNotFoundException($"Account with ID {transaction.AccountId} was not found.");
-
-                account.UpdateBalance(transaction, editedTransaction);
-                _accountRepository.UpdateAccount(account);
-            }
-
             transaction.Amount = editedTransaction.Amount;
             transaction.Date = DateOnly.Parse(editedTransaction.Date);
             transaction.Description = editedTransaction.Description;
@@ -109,9 +93,6 @@ namespace Application.Services
             if(transaction.Account.UserId != userId)
                 throw new UnauthorizedAccessException($"User (ID:{userId}) does not have access to delete transaction with ID {id}");
 
-            transaction.Account.RemoveTransactionFromBalance(transaction);
-            
-            _accountRepository.UpdateAccount(transaction.Account);
             _transactionRepository.DeleteTransaction(transaction);
             await _unitOfWork.SaveChangesAsync();
         }
@@ -122,7 +103,7 @@ namespace Application.Services
             if (string.IsNullOrEmpty(userId))
                 throw new UnauthorizedAccessException("Invalid token");
 
-            var userAccounts = await _accountRepository.GetAllUserAccountsAsync(userId, true);
+            var userAccounts = await _accountRepository.GetAllUserAccountsAsync(userId);
 
             var userTransactions = new List<TransactionDTO>();
             foreach (var account in userAccounts)

@@ -30,9 +30,6 @@ namespace Financy.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("Balance")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<decimal>("InitialBalance")
                         .HasColumnType("decimal(18,2)");
 
@@ -173,9 +170,9 @@ namespace Financy.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AccountId");
-
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("AccountId", "Type");
 
                     b.ToTable("Transactions");
                 });

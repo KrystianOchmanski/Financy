@@ -30,6 +30,9 @@ namespace Infrastructure
                 .HasForeignKey(t => t.AccountId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Transaction>()
+                .HasIndex(t => new { t.AccountId, t.Type});
+
             modelBuilder.Entity<Category>().HasData(
                 new Category { Id = 1, Name = "Groceries" },
                 new Category { Id = 2, Name = "House" },

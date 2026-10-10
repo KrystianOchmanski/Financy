@@ -46,7 +46,8 @@ export interface Transaction {
 export interface Account {
   id: number;
   name: string;
-  balance: number;
+  initalBalance: number;
+  totalBalance: number;
   transactions: Transaction[];
 }
 

@@ -69,7 +69,7 @@ export default function AccountPage() {
             className="flex justify-between border p-2 rounded shadow-sm"
           >
             <div>
-              <strong>{account.name}</strong>: ${formatAmount(account.balance)}
+              <strong>{account.name}</strong>: ${formatAmount(account.totalBalance)}
             </div>
             <button
               className="hover:bg-gray-200 rounded cursor-pointer"

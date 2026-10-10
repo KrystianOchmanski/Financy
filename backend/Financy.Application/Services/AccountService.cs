@@ -1,7 +1,6 @@
-﻿using Application.IRepositories;
-using Domain;
-using Domain.Interfaces;
+﻿using Domain;
 using Financy.Application.DTOs.AccountDTOs;
+using Financy.Application.IRepositories;
 using Financy.Application.IServices;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
@@ -38,7 +37,9 @@ namespace Financy.Application.Services
         public async Task<bool> DeleteAccount(ClaimsPrincipal userClaims, int id)
         {
             var userId = _userManager.GetUserId(userClaims);
-            
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Invalid token");
+
             var account = await _accountRepository.GetByIdAsync(id);
             if (account == null)
                 throw new KeyNotFoundException($"Account with ID:{id} was not found");
@@ -58,7 +59,7 @@ namespace Financy.Application.Services
         {
             var userId = _userManager.GetUserId(userClaims);
 
-            var account = await _accountRepository.GetByIdAsync(id, true);
+            var account = await _accountRepository.GetByIdAsync(id);
 
             if (account == null)
                 throw new KeyNotFoundException($"Account ID:{id} was not found.");
@@ -66,19 +67,65 @@ namespace Financy.Application.Services
             if (account.UserId != userId)
                 throw new UnauthorizedAccessException($"User (ID:{userId}) does not have access to account ID:{id}.");
 
-            return account;
+            var balance = await _accountRepository.GetAccountBalanceAsync(id);
+            return new AccountDTO(account, balance);
         }
 
-        public async Task<List<AccountDTO>> GetUserAccountsAsync(ClaimsPrincipal userClaims, bool includeTransactions)
+        public async Task<List<AccountDTO>> GetUserAccountsAsync(ClaimsPrincipal userClaims)
         {
             var userId = _userManager.GetUserId(userClaims);
             if (string.IsNullOrEmpty(userId))
                 throw new UnauthorizedAccessException("Invalid token");
 
-            var userAccounts = await _accountRepository.GetAllUserAccountsAsync(userId, includeTransactions);
-            var userAccountsDto = userAccounts.Select(a => new AccountDTO(a)).ToList();
+            var userAccounts = await _accountRepository.GetAllUserAccountsAsync(userId);
+            var userAccountsDto = new List<AccountDTO>((IEnumerable<AccountDTO>)userAccounts);
 
             return userAccountsDto;
+        }
+
+        public async Task<decimal> GetUserBalance(ClaimsPrincipal userClaims)
+        {
+            var userId = _userManager.GetUserId(userClaims);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Invalid token");
+
+            return await _accountRepository.GetUserBalanceAsync(userId);
+        }
+
+        public async Task<decimal> GetAccountBalance(ClaimsPrincipal userClaims, int accountId)
+        {
+            var userId = _userManager.GetUserId(userClaims);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Invalid token");
+
+            var account = await _accountRepository.GetByIdAsync(accountId);
+            if (account == null)
+                throw new KeyNotFoundException($"Account ID:{accountId} was not found.");
+
+            if (account.UserId != userId)
+                throw new UnauthorizedAccessException($"User (ID:{userId}) does not have access to account ID:{accountId}.");
+
+            return await _accountRepository.GetAccountBalanceAsync(accountId);
+        }
+
+        async Task<List<AccountDTO>> IAccountService.GetUserAccountsWithBalanceAsync(ClaimsPrincipal userClaims)
+        {
+            var userId = _userManager.GetUserId(userClaims);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Invalid token");
+
+            var userAccounts = await _accountRepository.GetUserAccountsWithBalanceAsync(userId);
+
+            return userAccounts.Select(account => new AccountDTO(account.Item1, account.Item2)).ToList();
+        }
+
+        async Task<List<Tuple<int, decimal>>> IAccountService.GetBalanceForUserAccountsAsync(ClaimsPrincipal userClaims)
+        {
+            var userId = _userManager.GetUserId(userClaims);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Invalid token");
+
+            return await _accountRepository.GetBalanceForUserAccountsAsync(userId);
         }
     }
 }
