@@ -11,19 +11,22 @@ namespace Financy.Application.DTOs.AccountDTOs
 
         public decimal InitialBalance { get; set; }
 
+        public decimal? TotalBalance { get; set; }
+
         public List<TransactionDTO> Transactions { get; set; } = new List<TransactionDTO>();
 
-        public AccountDTO(Account account) 
+        public AccountDTO(Account account, decimal? totalBalance) 
         { 
             Id = account.Id;
             Name = account.Name;
             InitialBalance = account.InitialBalance;
+            TotalBalance = totalBalance;
             Transactions = account.Transactions.Select(t => new TransactionDTO(t)).ToList();
         }
 
         public static implicit operator AccountDTO(Account account)
         {
-            return new AccountDTO(account);
+            return new AccountDTO(account, null);
         }
     }
 }

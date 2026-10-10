@@ -1,5 +1,5 @@
 ﻿using Domain;
-using Domain.Interfaces;
+using Financy.Application.IRepositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
@@ -13,9 +13,9 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<Account?> GetByIdAsync(int accountId, bool includeTransactions = false)
+        public async Task<Account?> GetByIdAsync(int accountId)
         {
-            return await BuildIncludeQuery(includeTransactions)
+            return await _context.Accounts
                 .FirstOrDefaultAsync(a => a.Id == accountId);
         }
 
@@ -34,15 +34,22 @@ namespace Infrastructure.Repositories
         public bool DeleteAccount(Account account)
         {
             var result = _context.Accounts.Remove(account);
-            
-            if(result.State == EntityState.Deleted)
+
+            if (result.State == EntityState.Deleted)
             {
                 return true;
-            } 
+            }
             else
             {
                 return false;
             }
+        }
+
+        public async Task<IEnumerable<Account>> GetAllUserAccountsAsync(string userId)
+        {
+            return await _context.Accounts
+                .Where(a => a.UserId == userId)
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<Account>> GetAllUserAccountWithLastTransactionsAsync(string userId, int size)
@@ -53,7 +60,7 @@ namespace Infrastructure.Repositories
                 {
                     Id = a.Id,
                     Name = a.Name,
-                    Balance = a.Balance,
+                    InitialBalance = a.InitialBalance,
                     UserId = a.UserId,
                     Transactions = a.Transactions
                         .OrderByDescending(t => t.Date)
@@ -63,28 +70,91 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Account>> GetAllUserAccountsAsync(string userId, bool includeTransactions = false)
+        public async Task<decimal> GetAccountBalanceAsync(int accountId)
         {
-            return await BuildIncludeQuery(includeTransactions)
-                .Where(a => a.UserId == userId)
-                .ToListAsync();
+            var initialBalance = await _context.Accounts
+                .Where(a => a.Id == accountId)
+                .Select(a => a.InitialBalance)
+                .FirstOrDefaultAsync();
+
+            var transactionBalance = await _context.Transactions
+                .Where(t => t.AccountId == accountId)
+                .Select(t => (decimal?)((t.Type == TransactionType.Expense ||
+                    (t.Type == TransactionType.Transfer && t.TransferDirection == TransferDirection.Outgoing))
+                    ? -t.Amount
+                    : t.Amount))
+                .SumAsync() ?? 0m;
+
+            return initialBalance + transactionBalance;
         }
 
-		/// <summary>
-		/// Helper method to build query with optional include
-		/// </summary>
-		private IQueryable<Account> BuildIncludeQuery(bool includeTransactions)
-		{
-			var query = _context.Accounts.AsQueryable();
+        public async Task<decimal> GetUserBalanceAsync(string userId)
+        {
+            return await _context.Accounts
+                .Where(a => a.UserId == userId)
+                .Select(a => a.InitialBalance +
+                    (_context.Transactions
+                        .Where(t => t.AccountId == a.Id)
+                        .Select(t => (decimal?)((t.Type == TransactionType.Expense ||
+                            (t.Type == TransactionType.Transfer && t.TransferDirection == TransferDirection.Outgoing))
+                            ? -t.Amount
+                            : t.Amount))
+                        .Sum() ?? 0m))
+                .SumAsync();
+        }
 
-			if (includeTransactions)
-			{
-				query = query
-					.Include(a => a.Transactions)
-					.ThenInclude(t => t.Category);
-			}
+        async Task<IEnumerable<Tuple<Account, decimal>>> IAccountRepository.GetUserAccountsWithBalanceAsync(string userId)
+        {
+            var transactionSums = _context.Transactions
+                .GroupBy(t => t.AccountId)
+                .Select(g => new
+                {
+                    AccountId = g.Key,
+                    BalanceDelta = g.Sum(t => (t.Type == TransactionType.Expense ||
+                        (t.Type == TransactionType.Transfer && t.TransferDirection == TransferDirection.Outgoing))
+                        ? -t.Amount
+                        : t.Amount)
+                });
 
-			return query;
-		}
-	}
+            var accountsWithBalance = await _context.Accounts
+                .Where(a => a.UserId == userId)
+                .GroupJoin(
+                    transactionSums,
+                    account => account.Id,
+                    sum => sum.AccountId,
+                    (account, sums) => new { account, sums })
+                .SelectMany(
+                    x => x.sums.DefaultIfEmpty(),
+                    (x, sum) => Tuple.Create(x.account, x.account.InitialBalance + (sum != null ? sum.BalanceDelta : 0m)))
+                .ToListAsync();
+
+            return accountsWithBalance;
+        }
+
+        async Task<List<Tuple<int, decimal>>> IAccountRepository.GetBalanceForUserAccountsAsync(string userId)
+        {
+            var transactionSums = _context.Transactions
+                .GroupBy(t => t.AccountId)
+                .Select(g => new
+                {
+                    AccountId = g.Key,
+                    BalanceDelta = g.Sum(t => (t.Type == TransactionType.Expense ||
+                        (t.Type == TransactionType.Transfer && t.TransferDirection == TransferDirection.Outgoing))
+                        ? -t.Amount
+                        : t.Amount)
+                });
+
+            return await _context.Accounts
+                .Where(a => a.UserId == userId)
+                .GroupJoin(
+                    transactionSums,
+                    account => account.Id,
+                    sum => sum.AccountId,
+                    (account, sums) => new { account, sums })
+                .SelectMany(
+                    x => x.sums.DefaultIfEmpty(),
+                    (x, sum) => Tuple.Create(x.account.Id, x.account.InitialBalance + (sum != null ? sum.BalanceDelta : 0m)))
+                .ToListAsync();
+        }
+    }
 }

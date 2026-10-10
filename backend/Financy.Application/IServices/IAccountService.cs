@@ -7,10 +7,18 @@ namespace Financy.Application.IServices
     {
         Task<AccountDTO?> GetByIdAsync(ClaimsPrincipal userClaims, int id);
 
-        Task<List<AccountDTO>> GetUserAccountsAsync(ClaimsPrincipal userClaims, bool includeTransactions);
+        Task<List<AccountDTO>> GetUserAccountsAsync(ClaimsPrincipal userClaims);
 
         Task<AccountDTO> AddUserAccountAsync(ClaimsPrincipal userClaims, CreateAccountDTO accountDTO);
 
         Task<bool> DeleteAccount(ClaimsPrincipal userClaims, int id);
+
+        Task<decimal> GetUserBalance(ClaimsPrincipal userClaims);
+
+        Task<decimal> GetAccountBalance(ClaimsPrincipal userClaims, int accountId);
+
+        Task<List<AccountDTO>> GetUserAccountsWithBalanceAsync(ClaimsPrincipal userClaims);
+
+        Task<List<Tuple<int, decimal>>> GetBalanceForUserAccountsAsync(ClaimsPrincipal userClaims);
     }
 }

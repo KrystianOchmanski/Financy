@@ -14,10 +14,6 @@ namespace Domain
         [Column(TypeName = "decimal(18,2)")]
         public decimal InitialBalance { get; set; }
 
-        [Range(0, double.MaxValue, ErrorMessage = "Balance cannot be negative")]
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal Balance { get; set; }
-
         [JsonIgnore]
         public List<Transaction> Transactions { get; set; } = new List<Transaction>();
 
@@ -28,58 +24,5 @@ namespace Domain
 
         [Timestamp]
         public byte[] RowVersion { get; set; } = null!;
-
-        public void AddTransactionToBalance(Transaction transaction)
-        {
-            switch (transaction.Type)
-            {
-                case TransactionType.Income:
-                    Balance += transaction.Amount;
-                    break;
-
-                case TransactionType.Expense:
-                    if (Balance < transaction.Amount)
-                    {
-                        throw new InvalidOperationException("Insufficient balance");
-                    }
-                    Balance -= transaction.Amount;
-                    break;
-            }
-        }
-
-        public void RemoveTransactionFromBalance(Transaction transaction)
-        {
-            switch (transaction.Type)
-            {
-                case TransactionType.Income:
-                    if (Balance - transaction.Amount < 0)
-                    {
-                        throw new InvalidOperationException("Cannot revert transaction as it would result in negative balance");
-                    }
-                    Balance -= transaction.Amount;
-                    break;
-                case TransactionType.Expense:
-                    Balance += transaction.Amount;
-                    break;
-            }
-        }
-
-        public void UpdateBalance(Transaction oldTransaction, Transaction newTransaction)
-        {
-            decimal amountDifference = oldTransaction.Amount - newTransaction.Amount;
-            switch (oldTransaction.Type)
-            {
-                case TransactionType.Income:
-                    if (Balance - amountDifference < 0)
-                    {
-                        throw new InvalidOperationException("Cannot revert transaction as it would result in negative balance");
-                    }
-                    Balance -= amountDifference;
-                    break;
-                case TransactionType.Expense:
-                    Balance += amountDifference;
-                    break;
-            }
-        }
     }
 }
