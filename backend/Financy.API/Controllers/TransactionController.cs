@@ -73,16 +73,18 @@ namespace Financy.API.Controllers
         [HttpPost]
         public async Task<IActionResult> AddTransactionAsync([FromBody] CreateTransactionDTO transactionDTO)
         {
-			if (!string.IsNullOrEmpty(transactionDTO.Date) && !DateOnly.TryParse(transactionDTO.Date, out _))
-			{
-				return BadRequest("Invalid Date format. Use YYYY-MM-DD.");
-			}
-
 			var newTransaction = await _transactionService.AddTransactionAsync(User, transactionDTO);
 			return CreatedAtAction(nameof(GetTransactionById), new { id = newTransaction.Id }, newTransaction);
 		}
 
-		[HttpPut("{id}")]
+        [HttpPost("transfer")]
+        public async Task<IActionResult> AddTransferTransactionAsync([FromBody] CreateTransferTransactionDTO transferTransactionDTO)
+        {
+            var newTransferTransactionGuid = await _transactionService.AddTransferTransactionAsync(User, transferTransactionDTO);
+            return Ok(newTransferTransactionGuid);
+        }
+
+        [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTransactionAsync(int id, [FromBody] EditTransactionDTO transaction)
         {
             if(id != transaction.Id)

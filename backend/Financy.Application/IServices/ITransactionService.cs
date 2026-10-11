@@ -18,5 +18,7 @@ namespace Financy.Application.IServices
         Task<TransactionDTO> UpdateTransactionAsync(ClaimsPrincipal userClaims, EditTransactionDTO editedTransaction);
 
         Task DeleteTransactionAsync(ClaimsPrincipal userClaims, int id);
+
+        Task<Guid> AddTransferTransactionAsync(ClaimsPrincipal user, CreateTransferTransactionDTO transferTransactionDTO);
     }
 }

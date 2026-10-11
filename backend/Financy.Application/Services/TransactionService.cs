@@ -177,5 +177,57 @@ namespace Financy.Application.Services
 
             return filteredTransactions;
         }
+
+        async Task<Guid> ITransactionService.AddTransferTransactionAsync(ClaimsPrincipal user, CreateTransferTransactionDTO transferTransactionDTO)
+        {
+            var userId = _userManager.GetUserId(user);
+            if(string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Invalid token");
+
+            var sourceAccount = await _accountRepository.GetByIdAsync(transferTransactionDTO.SourceAccountId);
+            if(sourceAccount == null)
+                throw new KeyNotFoundException($"Source account with ID {transferTransactionDTO.SourceAccountId} was not found.");
+
+            var destinationAccount = await _accountRepository.GetByIdAsync(transferTransactionDTO.DestinationAccountId);
+            if(destinationAccount == null)
+                throw new KeyNotFoundException($"Destination account with ID {transferTransactionDTO.DestinationAccountId} was not found.");
+
+            if(sourceAccount.UserId != userId || destinationAccount.UserId != userId)
+                throw new ForbiddenAccessException($"User (ID:{userId}) does not have access to one or both of the accounts involved in the transfer.");
+
+            if(sourceAccount.Id == destinationAccount.Id)
+                throw new InvalidOperationException("Source and destination accounts cannot be the same.");
+
+            var transferTransactionId = Guid.NewGuid();
+
+            var sourceTransaction = new Transaction
+            {
+                Amount = transferTransactionDTO.Amount,
+                Description = transferTransactionDTO.Description ?? "Transfer to " + destinationAccount.Name + " account",
+                Date = transferTransactionDTO.Date ?? DateOnly.FromDateTime(DateTime.UtcNow),
+                AccountId = transferTransactionDTO.SourceAccountId,
+                Account = sourceAccount,
+                Type = TransactionType.Expense,
+                TransferDirection = TransferDirection.Outgoing,
+                TransferGroupId = transferTransactionId,
+            };
+
+            var destinationTransaction = new Transaction
+            {
+                Amount = transferTransactionDTO.Amount,
+                Description = transferTransactionDTO.Description ?? "Transfer from " + sourceAccount.Name + " account",
+                Date = transferTransactionDTO.Date ?? DateOnly.FromDateTime(DateTime.UtcNow),
+                AccountId = transferTransactionDTO.DestinationAccountId,
+                Account = destinationAccount,
+                Type = TransactionType.Income,
+                TransferDirection = TransferDirection.Incoming,
+                TransferGroupId = transferTransactionId,
+            };
+
+            await _transactionRepository.CreateTransactionAsync(sourceTransaction);
+            await _transactionRepository.CreateTransactionAsync(destinationTransaction);
+            await _unitOfWork.SaveChangesAsync();
+            return transferTransactionId;
+        }
     }
 }

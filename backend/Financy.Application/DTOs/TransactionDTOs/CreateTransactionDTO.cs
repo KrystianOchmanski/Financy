@@ -11,8 +11,7 @@ namespace Financy.Application.DTOs.TransactionDTOs
         [Column(TypeName = "decimal(18,2)")]
         public decimal Amount { get; set; }
 
-        [Required]
-        public string Date { get; set; } = DateOnly.FromDateTime(DateTime.Now).ToShortDateString();
+        public DateOnly? Date { get; set; }
 
         [Required(ErrorMessage = "Description is required")]
         public string Description { get; set; } = null!;
@@ -29,7 +28,7 @@ namespace Financy.Application.DTOs.TransactionDTOs
             return new Transaction
             {
                 Amount = dto.Amount,
-                Date = DateOnly.Parse(dto.Date),
+                Date = dto.Date ?? DateOnly.FromDateTime(DateTime.UtcNow),
                 Description = dto.Description,
                 Type = dto.Type,
                 AccountId = dto.AccountId,

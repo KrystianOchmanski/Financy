@@ -27,7 +27,7 @@ namespace Financy.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetUserAccounts()
         {
-            var userAccounts = await _accountService.GetUserAccountsAsync(User);
+            var userAccounts = await _accountService.GetUserAccountsWithBalanceAsync(User);
             return Ok(userAccounts);
         }
 
