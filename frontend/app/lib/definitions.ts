@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }).trim(),
-  password: z.string().trim(),
+  password: z.string(),
 });
 
 export const registerSchema = z.object({
@@ -14,7 +14,6 @@ export const registerSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }).trim(),
   password: z
     .string()
-    .trim()
     .min(6, { message: "be at least 6 characters long." })
     .regex(/[!@#$%^&*(),.?":{}|<>]/, {
       message: "have at least one special character.",

@@ -61,26 +61,30 @@ namespace Financy.API.Controllers
         }
 
         /// <summary>
-        /// Refreshes an access token.
-        /// </summary>        
-        /// <returns>Returns a new access token.</returns>
+        /// Refreshes an access token and rotates the refresh token.
+        /// </summary>
+        /// <returns>Returns a new access token and a new refresh token (the old one stops working).</returns>
         /// <response code="200">Token refreshed successfully.</response>
         /// <response code="401">Invalid refresh token.</response>
         [HttpPost("refreshToken")]
-        public IActionResult RefreshToken([FromBody] string refreshToken)
-        {            
+        public async Task<IActionResult> RefreshToken([FromBody] string refreshToken)
+        {
             if (string.IsNullOrEmpty(refreshToken))
             {
                 return Unauthorized("No refresh token provided.");
             }
 
-            var newToken = _authService.RefreshToken(refreshToken);
-            if (newToken == null)
+            var result = await _authService.RefreshTokenAsync(refreshToken);
+            if (result == null)
             {
                 return Unauthorized("Invalid refresh token");
             }
 
-            return Ok(new { AccessToken = newToken });
+            return Ok(new
+            {
+                AccessToken = result.Value.Token,
+                result.Value.RefreshToken,
+            });
         }
 
 

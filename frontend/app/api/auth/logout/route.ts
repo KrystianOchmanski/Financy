@@ -1,19 +1,39 @@
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import {
+  REFRESH_TOKEN_COOKIE,
+  expiredRefreshTokenCookieOptions,
+} from "@/app/lib/authCookie";
+import { isSameOriginRequest } from "@/app/lib/sameOrigin";
 
-export async function GET() {
+export async function POST(request: NextRequest) {
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const cookieStore = await cookies();
-  const refreshToken = cookieStore.get("refreshToken")?.value;
+  const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)?.value;
 
-  fetch(`${process.env.API_URL}/auth/logout`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(refreshToken),
-  });
+  if (refreshToken) {
+    try {
+      const response = await fetch(`${process.env.API_URL}/auth/logout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(refreshToken),
+      });
 
-  cookieStore.delete("refreshToken");
+      if (!response.ok) {
+        console.error(`Revoking refresh token failed (${response.status})`);
+      }
+    } catch (error) {
+      console.error("Revoking refresh token failed", error);
+    }
+  }
 
-  return NextResponse.json({ status: 200, message: "Logged out" });
+  // The browser session ends even if the backend could not revoke the token.
+  cookieStore.set(REFRESH_TOKEN_COOKIE, "", expiredRefreshTokenCookieOptions);
+
+  return NextResponse.json({ message: "Logged out" });
 }

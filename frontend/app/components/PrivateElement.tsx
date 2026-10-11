@@ -2,7 +2,9 @@
 
 import { usePathname } from "next/navigation";
 import React from "react";
+import { isPublicRoute } from "../lib/routes";
 
+// Hides UI on public pages. This is presentation only; it does not protect anything.
 export default function PrivateElement({
   children,
 }: {
@@ -10,10 +12,9 @@ export default function PrivateElement({
 }) {
   const pathname = usePathname();
 
-  const publicPaths = ["/login", "/register"];
-  const isPublicPath = publicPaths.includes(pathname);
-
-  if (!isPublicPath) {
-    return <>{children}</>;
+  if (isPublicRoute(pathname)) {
+    return null;
   }
+
+  return <>{children}</>;
 }

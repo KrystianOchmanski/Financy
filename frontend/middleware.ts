@@ -1,23 +1,37 @@
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-
-const protectedRoutes = ["/dashboard", "/"];
-const publicRoutes = ["/login"];
+import { isPublicRoute } from "./app/lib/routes";
+import { REFRESH_TOKEN_COOKIE } from "./app/lib/authCookie";
+import { buildContentSecurityPolicy } from "./app/lib/contentSecurityPolicy";
 
 export default async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
-  const isProtectedRoute = protectedRoutes.includes(path);
-  const isPublicRoute = publicRoutes.includes(path);
+  const isPublic = isPublicRoute(path);
 
-  const refreshToken = (await cookies()).get("refreshToken")?.value;
+  // Optimistic check only: the backend validates the session on every API call.
+  const refreshToken = req.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
 
-  if (isProtectedRoute && !refreshToken) {
+  // Protect every route by default except explicit public pages.
+  if (!isPublic && !refreshToken) {
     return NextResponse.redirect(new URL("/login", req.nextUrl));
   }
 
-  if (isPublicRoute && refreshToken) {
+  if (isPublic && refreshToken) {
     return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
   }
 
-  return NextResponse.next();
+  // Next.js reads the nonce from the request CSP header and adds it to its own scripts.
+  const contentSecurityPolicy = buildContentSecurityPolicy(
+    btoa(crypto.randomUUID())
+  );
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("Content-Security-Policy", contentSecurityPolicy);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set("Content-Security-Policy", contentSecurityPolicy);
+
+  return response;
 }
+
+export const config = {
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
+};

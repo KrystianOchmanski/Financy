@@ -9,6 +9,7 @@ namespace Infrastructure
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Category> Categories { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -32,6 +33,17 @@ namespace Infrastructure
 
             modelBuilder.Entity<Transaction>()
                 .HasIndex(t => new { t.AccountId, t.Type});
+
+            // Delete User → delete User refresh tokens
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.RefreshTokens)
+                .WithOne(t => t.User)
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RefreshToken>()
+                .HasIndex(t => t.TokenHash)
+                .IsUnique();
 
             modelBuilder.Entity<Category>().HasData(
                 new Category { Id = 1, Name = "Groceries" },

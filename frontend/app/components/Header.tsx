@@ -1,18 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import toast from "react-hot-toast";
 import MenuItem from "./MenuItem";
-import { useAuth } from "../hooks/useAuth";
-import { useRouter } from "next/navigation";
+import { logout } from "../lib/session";
 
 export default function Header() {
-  const { clearAccessToken } = useAuth();
-  const router = useRouter();
-
-  const logout = async () => {
-    await fetch("/api/auth/logout");
-    clearAccessToken();
-    router.push("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      toast.error("Logout failed. Please try again.");
+    }
   };
 
   return (
@@ -30,7 +29,7 @@ export default function Header() {
         </menu>
         <span className="ml-3 ">
           <button
-            onClick={logout}
+            onClick={handleLogout}
             type="button"
             className="rounded-md bg-white px-3 py-2 text-xs lg:text-sm text-red-500 hover:bg-gray-200"
           >

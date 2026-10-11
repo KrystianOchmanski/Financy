@@ -2,6 +2,10 @@
 
 import { cookies } from "next/headers";
 import { loginSchema } from "@/app/lib/definitions";
+import {
+  REFRESH_TOKEN_COOKIE,
+  refreshTokenCookieOptions,
+} from "@/app/lib/authCookie";
 
 export async function login(prevState: any, formData: FormData) {
   const result = loginSchema.safeParse(Object.fromEntries(formData));
@@ -31,15 +35,7 @@ export async function login(prevState: any, formData: FormData) {
   const { accessToken, refreshToken } = await response.json();
 
   const cookieStore = await cookies();
-  const isProduction = process.env.NODE_ENV === "production";
-
-  cookieStore.set("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
-  });
+  cookieStore.set(REFRESH_TOKEN_COOKIE, refreshToken, refreshTokenCookieOptions);
 
   return { accessToken };
 }

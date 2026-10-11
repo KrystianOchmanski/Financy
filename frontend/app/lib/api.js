@@ -1,17 +1,14 @@
 import axios from "axios";
 import { useAuthStore } from "../store/authStore";
+import {
+  refreshAccessToken,
+  redirectToLogin,
+  SessionExpiredError,
+} from "./session";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
 });
-
-let isRefreshing = false;
-let refreshSubscribers = [];
-
-const onRefreshed = (newToken) => {
-  refreshSubscribers.forEach((callback) => callback(newToken));
-  refreshSubscribers = [];
-};
 
 api.interceptors.request.use(
   async (config) => {
@@ -29,41 +26,24 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve) => {
-          refreshSubscribers.push((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            resolve(api(originalRequest));
-          });
-        });
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        const data = await fetch("/api/auth/refreshToken", {
-          credentials: "include",
-        });
-
-        if (!data.ok) throw Error("Refreshing token failed");
-
-        const { accessToken: newToken } = await data.json();
-        useAuthStore.getState().setAccessToken(newToken);
-        onRefreshed(newToken);
-
-        return api(originalRequest);
-      } catch (refreshError) {
-        useAuthStore.getState().clearAccessToken();
-        window.location.href = "/login";
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
+    if (error.response?.status !== 401 || originalRequest._retry) {
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
+    originalRequest._retry = true;
+
+    try {
+      // Concurrent 401s wait for the same refresh, and all of them fail if it fails.
+      const newToken = await refreshAccessToken();
+      originalRequest.headers.Authorization = `Bearer ${newToken}`;
+
+      return api(originalRequest);
+    } catch (refreshError) {
+      if (refreshError instanceof SessionExpiredError) {
+        redirectToLogin();
+      }
+      return Promise.reject(refreshError);
+    }
   }
 );
 

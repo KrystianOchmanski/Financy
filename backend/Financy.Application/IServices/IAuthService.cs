@@ -8,7 +8,7 @@ namespace Financy.Application.IServices
     {
         Task<(string Token, string RefreshToken)?> LoginAsync(LoginDTO loginDTO);
 
-        string? RefreshToken(string refreshToken);
+        Task<(string Token, string RefreshToken)?> RefreshTokenAsync(string refreshToken);
 
         Task<IdentityResult> RegisterAsync(RegisterDTO registerDTO);
 

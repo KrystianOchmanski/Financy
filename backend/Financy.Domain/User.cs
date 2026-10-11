@@ -12,6 +12,7 @@ namespace Domain
         [JsonIgnore]
         public List<Account> Accounts { get; set; } = new List<Account>();
 
-        public string? RefreshToken { get; set; }
+        [JsonIgnore]
+        public List<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     }
 }
