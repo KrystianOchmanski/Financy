@@ -125,7 +125,8 @@ namespace Infrastructure.Repositories
                     (account, sums) => new { account, sums })
                 .SelectMany(
                     x => x.sums.DefaultIfEmpty(),
-                    (x, sum) => Tuple.Create(x.account, x.account.InitialBalance + (sum != null ? sum.BalanceDelta : 0m)))
+                    // Accounts without transactions get NULL from the left join, so read the sum as nullable.
+                    (x, sum) => Tuple.Create(x.account, x.account.InitialBalance + ((decimal?)sum!.BalanceDelta ?? 0m)))
                 .ToListAsync();
 
             return accountsWithBalance;
@@ -153,7 +154,7 @@ namespace Infrastructure.Repositories
                     (account, sums) => new { account, sums })
                 .SelectMany(
                     x => x.sums.DefaultIfEmpty(),
-                    (x, sum) => Tuple.Create(x.account.Id, x.account.InitialBalance + (sum != null ? sum.BalanceDelta : 0m)))
+                    (x, sum) => Tuple.Create(x.account.Id, x.account.InitialBalance + ((decimal?)sum!.BalanceDelta ?? 0m)))
                 .ToListAsync();
         }
     }
