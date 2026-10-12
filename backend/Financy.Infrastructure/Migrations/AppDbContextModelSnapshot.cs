@@ -182,7 +182,7 @@ namespace Financy.Infrastructure.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("CategoryId")
+                    b.Property<int?>("CategoryId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
@@ -214,7 +214,10 @@ namespace Financy.Infrastructure.Migrations
 
                     b.HasIndex("AccountId", "Type");
 
-                    b.ToTable("Transactions");
+                    b.ToTable("Transactions", t =>
+                        {
+                            t.HasCheckConstraint("CK_Transactions_TransferCategoryConsistency", "(([TransferGroupId] IS NULL AND [TransferDirection] IS NULL AND [CategoryId] IS NOT NULL) OR ([TransferGroupId] IS NOT NULL AND [TransferDirection] IS NOT NULL AND [CategoryId] IS NULL))");
+                        });
                 });
 
             modelBuilder.Entity("Domain.User", b =>
@@ -305,9 +308,7 @@ namespace Financy.Infrastructure.Migrations
 
                     b.HasOne("Domain.Category", "Category")
                         .WithMany("Transactions")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("CategoryId");
 
                     b.Navigation("Account");
 

@@ -34,6 +34,11 @@ namespace Infrastructure
             modelBuilder.Entity<Transaction>()
                 .HasIndex(t => new { t.AccountId, t.Type});
 
+            modelBuilder.Entity<Transaction>()
+                .ToTable(tb => tb.HasCheckConstraint(
+                    "CK_Transactions_TransferCategoryConsistency",
+                    "(([TransferGroupId] IS NULL AND [TransferDirection] IS NULL AND [CategoryId] IS NOT NULL) OR ([TransferGroupId] IS NOT NULL AND [TransferDirection] IS NOT NULL AND [CategoryId] IS NULL))"));
+
             // Delete User → delete User refresh tokens
             modelBuilder.Entity<User>()
                 .HasMany(u => u.RefreshTokens)

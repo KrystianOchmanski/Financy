@@ -18,9 +18,9 @@ namespace Financy.Application.DTOs.TransactionDTOs
 
         public string AccountName { get; set; } = string.Empty;
 
-        public int CategoryId { get; set; }
+        public int? CategoryId { get; set; }
 
-        public string CategoryName { get; set; } = string.Empty;
+        public string? CategoryName { get; set; }
 
         public TransactionDTO(Transaction transaction)
         {
@@ -32,7 +32,7 @@ namespace Financy.Application.DTOs.TransactionDTOs
             AccountId = transaction.AccountId;
             AccountName = transaction.Account.Name;
             CategoryId = transaction.CategoryId;
-            CategoryName = transaction.Category.Name;
+            CategoryName = transaction.Category?.Name;
         }
 
         public static implicit operator TransactionDTO(Transaction transaction)

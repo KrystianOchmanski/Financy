@@ -33,10 +33,10 @@ namespace Domain
         [JsonIgnore]
         public Account Account { get; set; } = null!;
 
-        public int CategoryId { get; set; }
+        public int? CategoryId { get; set; }
 
         [JsonIgnore]
-        public Category Category { get; set; } = null!;
+        public Category? Category { get; set; }
 
         public TransferDirection? TransferDirection { get; set; } = null;
 

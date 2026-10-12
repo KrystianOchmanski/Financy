@@ -19,8 +19,10 @@ namespace Financy.Application.DTOs.TransactionDTOs
         [Required]
         public TransactionType Type { get; set; }
 
+        [Range(1, int.MaxValue, ErrorMessage = "AccountId must be greater than 0")]
         public int AccountId { get; set; }
 
+        [Range(1, int.MaxValue, ErrorMessage = "CategoryId must be greater than 0")]
         public int CategoryId { get; set; }
 
         public static implicit operator Transaction(CreateTransactionDTO dto)
