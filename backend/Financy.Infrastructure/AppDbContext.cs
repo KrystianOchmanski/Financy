@@ -50,6 +50,11 @@ namespace Infrastructure
                 .HasIndex(t => t.TokenHash)
                 .IsUnique();
 
+            modelBuilder.Entity<Transaction>()
+                .HasIndex(t => new { t.TransferGroupId, t.TransferDirection })
+                .IsUnique()
+                .HasFilter("[TransferGroupId] IS NOT NULL");
+
             modelBuilder.Entity<Category>().HasData(
                 new Category { Id = 1, Name = "Groceries" },
                 new Category { Id = 2, Name = "House" },

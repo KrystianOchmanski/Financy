@@ -214,6 +214,10 @@ namespace Financy.Infrastructure.Migrations
 
                     b.HasIndex("AccountId", "Type");
 
+                    b.HasIndex("TransferGroupId", "TransferDirection")
+                        .IsUnique()
+                        .HasFilter("[TransferGroupId] IS NOT NULL");
+
                     b.ToTable("Transactions", t =>
                         {
                             t.HasCheckConstraint("CK_Transactions_TransferCategoryConsistency", "(([TransferGroupId] IS NULL AND [TransferDirection] IS NULL AND [CategoryId] IS NOT NULL) OR ([TransferGroupId] IS NOT NULL AND [TransferDirection] IS NOT NULL AND [CategoryId] IS NULL))");
