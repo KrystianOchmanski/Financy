@@ -37,5 +37,12 @@ namespace Infrastructure.Repositories
         {
             _context.Transactions.Remove(transaction);
         }
+
+        public async Task<Transaction?> GetTransferTransactionByGroupIdAndDirection(Guid transferGroupId, TransferDirection direction)
+        {
+            return await _context.Transactions
+                .Include(t => t.Account)
+                .FirstOrDefaultAsync(t => t.TransferGroupId == transferGroupId && t.TransferDirection == direction);
+        }
     }
 }

@@ -8,5 +8,6 @@ namespace Financy.Application.IRepositories
         Task<Transaction> CreateTransactionAsync(Transaction transaction);
         Transaction UpdateTransaction(Transaction transaction);
         void DeleteTransaction(Transaction transaction);
+        Task<Transaction?> GetTransferTransactionByGroupIdAndDirection(Guid transferGroupId, TransferDirection direction);
     }
 }

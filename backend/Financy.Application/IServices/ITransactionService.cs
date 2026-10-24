@@ -20,5 +20,7 @@ namespace Financy.Application.IServices
         Task DeleteTransactionAsync(ClaimsPrincipal userClaims, int id);
 
         Task<Guid> AddTransferTransactionAsync(ClaimsPrincipal user, CreateTransferTransactionDTO transferTransactionDTO);
+        Task<IEnumerable<TransactionDTO>> UpdateTransferTransactionAsync(ClaimsPrincipal user, EditTransferTransactionDTO transferTransactionDTO);
+        Task DeleteTransferTransactionAsync(ClaimsPrincipal user, Guid transferGroupId);
     }
 }

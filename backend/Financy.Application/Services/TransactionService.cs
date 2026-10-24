@@ -63,9 +63,11 @@ namespace Financy.Application.Services
             if (transaction == null)
                 throw new KeyNotFoundException($"Transaction with ID {editedTransaction.Id} was not found.");
 
+            if (transaction.TransferGroupId != null)
+                throw new InvalidOperationException("Transfer transactions must be edited using the transfer endpoint.");
+
             if (transaction.Account.UserId != userId)
                 throw new ForbiddenAccessException($"User (ID:{userId}) does not have access to update transaction with ID {editedTransaction.Id}");
-
 
             // When changing category
             if (transaction.CategoryId != editedTransaction.CategoryId)
@@ -77,14 +79,25 @@ namespace Financy.Application.Services
                 transaction.Category = newCategory;
             }
 
+            //When changing account
+            if (transaction.AccountId != editedTransaction.AccountId)
+            {
+                var newAccount = await _accountRepository.GetByIdAsync(editedTransaction.AccountId);
+                if (newAccount == null)
+                    throw new KeyNotFoundException($"Account with ID {editedTransaction.AccountId} was not found.");
+                if (newAccount.UserId != userId)
+                    throw new ForbiddenAccessException($"User (ID:{userId}) does not have access to account with ID {editedTransaction.AccountId}");
+                transaction.Account = newAccount;
+            }
+
             transaction.Amount = editedTransaction.Amount;
             transaction.Date = DateOnly.Parse(editedTransaction.Date);
             transaction.Description = editedTransaction.Description;
+            transaction.Type = editedTransaction.Type;
 
             var updatedTransaction = _transactionRepository.UpdateTransaction(transaction);
             await _unitOfWork.SaveChangesAsync();
             return updatedTransaction;
-
         }
 
         public async Task DeleteTransactionAsync(ClaimsPrincipal userClaims, int id)
@@ -96,9 +109,10 @@ namespace Financy.Application.Services
             var transaction = await _transactionRepository.GetByIdAsync(id);
             if (transaction == null)
                 throw new KeyNotFoundException($"Transaction with ID {id} was not found.");
-
             if(transaction.Account.UserId != userId)
                 throw new ForbiddenAccessException($"User (ID:{userId}) does not have access to delete transaction with ID {id}");
+            if (transaction.TransferGroupId != null)
+                throw new InvalidOperationException("Transfer transactions must be deleted using the transfer endpoint");
 
             _transactionRepository.DeleteTransaction(transaction);
             await _unitOfWork.SaveChangesAsync();
@@ -230,6 +244,77 @@ namespace Financy.Application.Services
             await _transactionRepository.CreateTransactionAsync(destinationTransaction);
             await _unitOfWork.SaveChangesAsync();
             return transferTransactionId;
+        }
+
+        public async Task<IEnumerable<TransactionDTO>> UpdateTransferTransactionAsync(ClaimsPrincipal user, EditTransferTransactionDTO transferTransactionDTO)
+        {
+            var userId = _userManager.GetUserId(user);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Invalid token");
+            if (transferTransactionDTO.SourceAccountId == transferTransactionDTO.DestinationAccountId)
+                throw new InvalidOperationException("Source and destination accounts cannot be the same.");
+
+            var sourceTransaction = await _transactionRepository.GetTransferTransactionByGroupIdAndDirection(transferTransactionDTO.TransferGroupId, TransferDirection.Outgoing);
+            var destinationTransaction = await _transactionRepository.GetTransferTransactionByGroupIdAndDirection(transferTransactionDTO.TransferGroupId, TransferDirection.Incoming);
+
+            if (sourceTransaction == null || destinationTransaction == null)
+                throw new KeyNotFoundException($"Transfer transactions with group ID {transferTransactionDTO.TransferGroupId} were not found.");
+            if (sourceTransaction.Account.UserId != userId || destinationTransaction.Account.UserId != userId)
+                throw new ForbiddenAccessException($"User (ID:{userId}) does not have access to one or both of the accounts involved in the transfer.");
+
+            if (sourceTransaction.AccountId != transferTransactionDTO.SourceAccountId)
+            {
+                var newSourceAccount = await _accountRepository.GetByIdAsync(transferTransactionDTO.SourceAccountId);
+                if (newSourceAccount == null)
+                    throw new KeyNotFoundException($"Source account with ID {transferTransactionDTO.SourceAccountId} was not found.");
+                if (newSourceAccount.UserId != userId)
+                    throw new ForbiddenAccessException($"User (ID:{userId}) does not have access to the source account with ID {transferTransactionDTO.SourceAccountId}");
+                sourceTransaction.Account = newSourceAccount;
+                sourceTransaction.AccountId = transferTransactionDTO.SourceAccountId;
+                sourceTransaction.TransferDirection = TransferDirection.Outgoing;
+            }
+            if (destinationTransaction.AccountId != transferTransactionDTO.DestinationAccountId)
+            {
+                var newDestinationAccount = await _accountRepository.GetByIdAsync(transferTransactionDTO.DestinationAccountId);
+                if (newDestinationAccount == null)
+                    throw new KeyNotFoundException($"Destination account with ID {transferTransactionDTO.DestinationAccountId} was not found.");
+                if (newDestinationAccount.UserId != userId)
+                    throw new ForbiddenAccessException($"User (ID:{userId}) does not have access to the destination account with ID {transferTransactionDTO.DestinationAccountId}");
+                destinationTransaction.Account = newDestinationAccount;
+                destinationTransaction.AccountId = transferTransactionDTO.DestinationAccountId;
+                destinationTransaction.TransferDirection = TransferDirection.Incoming;
+            }
+
+            sourceTransaction.Amount = transferTransactionDTO.Amount;
+            sourceTransaction.Date = transferTransactionDTO.Date;
+            sourceTransaction.Description = transferTransactionDTO.Description ?? sourceTransaction.Description;
+            destinationTransaction.Amount = transferTransactionDTO.Amount;
+            destinationTransaction.Date = transferTransactionDTO.Date;
+            destinationTransaction.Description = transferTransactionDTO.Description ?? destinationTransaction.Description;
+
+            _transactionRepository.UpdateTransaction(sourceTransaction);
+            _transactionRepository.UpdateTransaction(destinationTransaction);
+            await _unitOfWork.SaveChangesAsync();
+            return new List<TransactionDTO>() { new TransactionDTO(sourceTransaction), new TransactionDTO(destinationTransaction) };
+        }
+
+        async Task ITransactionService.DeleteTransferTransactionAsync(ClaimsPrincipal user, Guid transferGroupId)
+        {
+            var userId = _userManager.GetUserId(user);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Invalid token");
+
+            var sourceTransaction = await _transactionRepository.GetTransferTransactionByGroupIdAndDirection(transferGroupId, TransferDirection.Outgoing);
+            var destinationTransaction = await _transactionRepository.GetTransferTransactionByGroupIdAndDirection(transferGroupId, TransferDirection.Incoming);
+
+            if (sourceTransaction == null || destinationTransaction == null)
+                throw new KeyNotFoundException($"Transfer transactions with group ID {transferGroupId} were not found.");
+            if (sourceTransaction.Account.UserId != userId || destinationTransaction.Account.UserId != userId)
+                throw new ForbiddenAccessException($"User (ID:{userId}) does not have access to one or both of the accounts involved in the transfer.");
+
+            _transactionRepository.DeleteTransaction(sourceTransaction);
+            _transactionRepository.DeleteTransaction(destinationTransaction);
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 }

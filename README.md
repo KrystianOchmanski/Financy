@@ -263,8 +263,10 @@ The password policy is the ASP.NET Core Identity default: at least 6 characters,
 | `GET` | `/expenses?startDate=YYYY-MM-DD` | Sum of expenses since `startDate`. |
 | `POST` | `/` | Body `{ amount, date?, description, type, accountId, categoryId }`. If `date` is omitted, today's date is used. |
 | `POST` | `/transfer` | Body `{ sourceAccountId, destinationAccountId, amount, date?, description? }`. Returns the `transferGroupId`. |
-| `PUT` | `/{id}` | Body `{ id, amount, date, description, categoryId }`. |
-| `DELETE` | `/{id}` | Deletes a transaction. |
+| `PUT` | `/{id}` | Body `{ id, amount, date, description, type, accountId, categoryId }`. Used for regular income/expense transactions. |
+| `DELETE` | `/{id}` | Deletes a regular transaction. |
+| `PUT` | `/transfer/{transferGroupId}` | Body `{ transferGroupId, sourceAccountId, destinationAccountId, amount, date, description? }`. Updates both transfer legs atomically. |
+| `DELETE` | `/transfer/{transferGroupId}` | Deletes both transfer legs in one operation. |
 
 ## Frontend scripts
 
@@ -300,7 +302,8 @@ Run from `frontend/`:
   - The endpoints only use `startDate`, so the period's `endDate` is ignored.
   - Transfer legs are stored as income and expense rows, so transfers count towards these totals.
 - `GET /transaction/filter`, `/incomes` and `/expenses` load all of the user's transactions into memory before filtering. There is no pagination.
-- Editing a transaction can't change its type or account. Each transfer leg is edited or deleted on its own: changing one leg leaves the other unchanged.
+- Editing a regular transaction can change its type, account, amount, category, date and description.
+- Transfer legs cannot be edited or deleted through `PUT /transaction/{id}` or `DELETE /transaction/{id}`. Use the transfer endpoints with `transferGroupId`, which update/delete both legs together.
 - The **Add account** form requires a starting balance greater than 0. The API itself accepts any value, including negative ones.
 - There are no automated tests yet.
 

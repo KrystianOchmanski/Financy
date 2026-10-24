@@ -19,6 +19,10 @@ namespace Financy.Application.DTOs.TransactionDTOs
         [Required(ErrorMessage = "Description is required")]
         public string Description { get; set; } = null!;
 
+        public TransactionType Type { get; set; }
+
+        public int AccountId { get; set; }
+
         public int CategoryId { get; set; }
 
         public static implicit operator Transaction(EditTransactionDTO dto)
@@ -30,6 +34,8 @@ namespace Financy.Application.DTOs.TransactionDTOs
                 Date = DateOnly.Parse(dto.Date),
                 Description = dto.Description,
                 CategoryId = dto.CategoryId,
+                Type = dto.Type,
+                AccountId = dto.AccountId
             };
         }
     }

@@ -6,7 +6,7 @@ using Domain;
 
 namespace Financy.API.Controllers
 {
-	[Route("api/transaction")]
+    [Route("api/transaction")]
     [ApiController]
     [Authorize]
     public class TransactionController : Controller
@@ -35,7 +35,7 @@ namespace Financy.API.Controllers
         [HttpGet("incomes")]
         public async Task<IActionResult> GetIncomes(string startDate)
         {
-            var filter = new TransactionFilterDTO { Type = TransactionType.Income, StartDate = startDate};
+            var filter = new TransactionFilterDTO { Type = TransactionType.Income, StartDate = startDate };
             var filteredTransactions = await _transactionService.GetFilteredTransactionsAsync(User, filter);
             decimal incomes = filteredTransactions.Aggregate((decimal)0, (sum, t) => sum + t.Amount);
 
@@ -56,8 +56,8 @@ namespace Financy.API.Controllers
         public async Task<IActionResult> GetTransactionById(int id)
         {
             var transaction = await _transactionService.GetTransactionByIdAsync(User, id);
-            
-            if(transaction == null)
+
+            if (transaction == null)
                 return NotFound();
 
             return Ok(transaction);
@@ -73,9 +73,9 @@ namespace Financy.API.Controllers
         [HttpPost]
         public async Task<IActionResult> AddTransactionAsync([FromBody] CreateTransactionDTO transactionDTO)
         {
-			var newTransaction = await _transactionService.AddTransactionAsync(User, transactionDTO);
-			return CreatedAtAction(nameof(GetTransactionById), new { id = newTransaction.Id }, newTransaction);
-		}
+            var newTransaction = await _transactionService.AddTransactionAsync(User, transactionDTO);
+            return CreatedAtAction(nameof(GetTransactionById), new { id = newTransaction.Id }, newTransaction);
+        }
 
         [HttpPost("transfer")]
         public async Task<IActionResult> AddTransferTransactionAsync([FromBody] CreateTransferTransactionDTO transferTransactionDTO)
@@ -87,7 +87,7 @@ namespace Financy.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTransactionAsync(int id, [FromBody] EditTransactionDTO transaction)
         {
-            if(id != transaction.Id)
+            if (id != transaction.Id)
             {
                 return BadRequest($"Transaction ID mismatch. Request ID:{id} Body ID:{transaction.Id}");
             }
@@ -104,6 +104,26 @@ namespace Financy.API.Controllers
         public async Task<IActionResult> DeleteTransactionAsync(int id)
         {
             await _transactionService.DeleteTransactionAsync(User, id);
+            return NoContent();
+        }
+
+        [HttpPut("transfer/{transferGroupId}")]
+        public async Task<IActionResult> UpdateTransferTransactionAsync(Guid transferGroupId, [FromBody] EditTransferTransactionDTO transferTransactionDTO)
+        {
+            if (transferGroupId != transferTransactionDTO.TransferGroupId)
+            {
+                return BadRequest($"Transfer Group ID mismatch. Request ID:{transferGroupId} Body ID:{transferTransactionDTO.TransferGroupId}");
+            }
+            var updatedTransferTransactions = await _transactionService.UpdateTransferTransactionAsync(User, transferTransactionDTO);
+            if (updatedTransferTransactions == null)
+                return NotFound();
+            return Ok(updatedTransferTransactions);
+        }
+
+        [HttpDelete("transfer/{transferGroupId}")]
+        public async Task<IActionResult> DeleteTransferTransactionAsync(Guid transferGroupId)
+        {
+            await _transactionService.DeleteTransferTransactionAsync(User, transferGroupId);
             return NoContent();
         }
     }
